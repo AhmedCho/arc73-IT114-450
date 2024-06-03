@@ -22,10 +22,10 @@ public class Problem2 {
         //hint: use the arr variable; don't diretly use the a1-a4 variables
         //TODO add/edit code here
         //arc73 6-3-2024
-       
-        //set the double to a string variable
-        //TODO ensure rounding is to two decimal places (i.e., 0.10, 0.01, 1.00)
-        totalOutput = total+"";
+        for (double value : arr) { // Iterating through arrays and adds them together and stores in "total"
+            total += value;
+        }
+        totalOutput = String.format("%.2f", total); // Edited output to be converted a string and display two decimal places
         //end add/edit section
         System.out.println("Total is " + totalOutput);
         System.out.println("End process");

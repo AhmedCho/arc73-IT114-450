@@ -20,7 +20,12 @@ public class Problem1 {
         System.out.println("Odds output:");
         //hint: use the arr variable; don't diretly use the a1-a4 variables
         //TODO add/edit code here
-        
+        //arc73 6-3-2024
+        for (int num : arr) { // Iterates through array
+            if (num % 2 != 0) { //Determines if number is odd if remainder is not 0
+                System.out.print(num + " ");
+            }
+        }
         //end add/edit section
         System.out.println();
         System.out.println("End process");
