@@ -22,6 +22,7 @@ public class Problem3 {
         Object[] output = new Object[arr.length];
         //hint: use the arr variable; don't diretly use the a1-a4 variables
         //TODO convert each value to positive
+        //arc73 6-3-2024
         //set the result to the proper index of the output array and maintain the original data type
         //hint: don't forget to handle the data types properly, the result datatype should be the same as the original datatype
         

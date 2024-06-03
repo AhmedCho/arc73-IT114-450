@@ -21,6 +21,7 @@ public class Problem2 {
         String totalOutput = "";
         //hint: use the arr variable; don't diretly use the a1-a4 variables
         //TODO add/edit code here
+        //arc73 6-3-2024
        
         //set the double to a string variable
         //TODO ensure rounding is to two decimal places (i.e., 0.10, 0.01, 1.00)
