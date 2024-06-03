@@ -22,10 +22,26 @@ public class Problem3 {
         Object[] output = new Object[arr.length];
         //hint: use the arr variable; don't diretly use the a1-a4 variables
         //TODO convert each value to positive
-        //arc73 6-3-2024
         //set the result to the proper index of the output array and maintain the original data type
         //hint: don't forget to handle the data types properly, the result datatype should be the same as the original datatype
-        
+        //arc73 6-3-2024
+        for (int i = 0; i < arr.length; i++) { //Iterates through each index of the array
+            if (arr[i] instanceof Number) {
+                if (((Number) arr[i]).doubleValue() < 0) { //Checks if value is negative
+                    if (arr[i] instanceof Integer) {
+                        output[i] = Math.abs((Integer) arr[i]); //If the condition of being an integer is also true, it is converted to positive
+                    } else if (arr[i] instanceof Double) {
+                        output[i] = Math.abs((Double) arr[i]); //If the condition of being a double value is also true, it is converted to positive
+                    }
+                } else {
+                    // If positive/zero, stays as is
+                    output[i] = arr[i];
+                }
+            } else {
+                // If it is not a number, also stays as is
+                output[i] = arr[i];
+            }
+        }
         //end edit section
 
         StringBuilder sb = new StringBuilder();
