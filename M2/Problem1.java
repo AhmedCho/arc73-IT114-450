@@ -18,14 +18,9 @@ public class Problem1 {
     static void processArray(int[] arr){
         System.out.println("Processing Array:" + Arrays.toString(arr));
         System.out.println("Odds output:");
-        //hint: use the arr variable; don't directly use the a1-a4 variables
+        //hint: use the arr variable; don't diretly use the a1-a4 variables
         //TODO add/edit code here
-        // Processes the array and prints odd numbers
-        for (int num : arr) {
-            if (num % 2 != 0) { //using the modulo operator to get odd numbers
-                System.out.print(num + " ");
-            }
-        }
+        
         //end add/edit section
         System.out.println();
         System.out.println("End process");
