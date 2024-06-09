@@ -129,11 +129,16 @@ public class NumberGuesser4 {
         if (guess == number) {
             win();
             pickNewRandom = true;
-        } else {
-            System.out.println("That's wrong");
+        } else { // arc73 - 6/9/24 - 1. Display higher/lower hint after a wrong guess
+            System.out.println("That's wrong"); // Output displays wrong if guess is incorrect
             strikes++;
+            if (guess < number) { //If the condition for the guess being less than the answer is met, output displays "Higher" hint
+                System.out.println("Higher");
+            } else { //Otherwise, output displays "Lower" hint
+                System.out.println("Lower");
+            }
             if (strikes >= maxStrikes) {
-                lose();
+                lose(); // If strike count reaches max, player loses
                 pickNewRandom = true;
             }
         }
@@ -156,6 +161,25 @@ public class NumberGuesser4 {
         try (Scanner input = new Scanner(System.in);) {
             System.out.println("Welcome to NumberGuesser4.0");
             System.out.println("To exit, type the word 'quit'.");
+            
+            // arc73 6/9/24 - difficulty selector
+            System.out.println("Select level difficulty: ");
+            System.out.println("1. Easy - 2. Medium - 3. Hard");
+            int difficulty = input.nextInt(); //asks for user input
+            input.nextLine();
+            switch (difficulty) { //switch case is created for the 3 possible decisions the user can make
+                case 1: //User enters 1
+                    maxStrikes = 5; // Easy - 5 guesses allowed
+                    break;
+                case 2: //User enters 2
+                    maxStrikes = 3; // Medium - 3 Guesses allowed
+                    break;
+                case 3: //User enters 3
+                    maxStrikes = 1; // Hard - Only one guess allowed
+                    break;
+            }
+            System.out.println("Maximum amount of guesses: " + maxStrikes); // Tells user how many guesses they have for the difficulty they selected
+
             loadState();
             do {
                 if (pickNewRandom) {
