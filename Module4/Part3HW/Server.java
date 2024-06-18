@@ -3,14 +3,20 @@ package Module4.Part3HW;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.Random;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Iterator;
 
 public class Server {
     private int port = 3000;
+    private boolean gameActive = false;
+    private int hiddenNumber;
     // connected clients
     // Use ConcurrentHashMap for thread-safe client management
     private final ConcurrentHashMap<Long, ServerThread> connectedClients = new ConcurrentHashMap<>();
     private boolean isRunning = true;
+
+    
 
     private void start(int port) {
         this.port = port;
@@ -58,6 +64,24 @@ public class Server {
         connectedClients.remove(id);
         // Improved logging with user ID
         relay("User[" + id + "] disconnected", null);
+    }
+
+    protected synchronized void broadcast(String message, long id) {
+        ServerThread sender = connectedClients.get(id);
+        if (sender != null && processCommand(message, sender)) {
+            return;
+        }
+        message = String.format("User[%d]: %s", id, message);
+        Iterator<ServerThread> it = connectedClients.values().iterator();
+        while (it.hasNext()) {
+            ServerThread client = it.next();
+            boolean wasSuccessful = client.send(message);
+            if (!wasSuccessful) {
+                System.out.println(String.format("Removing disconnected client[%s] from list", client.getClientId()));
+                it.remove();
+                broadcast("Disconnected", id);
+            }
+        }
     }
 
     /**
@@ -111,6 +135,7 @@ public class Server {
         if(sender == null){
             return false;
         }
+        long clientId = sender.getClientId();
         System.out.println("Checking command: " + message);
         // disconnect
         if ("/disconnect".equalsIgnoreCase(message)) {
@@ -121,7 +146,50 @@ public class Server {
             return true;
         }
         // add more "else if" as needed
+        // arc73 6/17/24 - Implementation #1 - Number Guesser
+         else if (message.equalsIgnoreCase("/start")) {
+            if (!gameActive) {
+                gameActive = true;
+                // Generate a random number between 1 and 100 as the hidden number
+                hiddenNumber = new Random().nextInt(100) + 1;
+                broadcast("Number guesser game started! Guess a number between 1 and 100.", clientId);
+            }
+            return true;
+        } else if (message.equalsIgnoreCase("/stop")) {
+            if (gameActive) {
+                gameActive = false;
+                broadcast("Number guesser game stopped. Guesses will be treated as regular messages.", clientId);
+            }
+            return true;
+        } else if (message.toLowerCase().startsWith("/guess")) {
+            if (gameActive) {
+                try {
+                    int guess = Integer.parseInt(message.substring(7).trim());
+                    String guessResult = (guess == hiddenNumber) ? "correct!" : "incorrect.";
+                    broadcast("User[" + clientId + "] guessed " + guess + ", which was " + guessResult, clientId);
+                } catch (NumberFormatException e) {
+                    broadcast("Invalid guess format. Please provide a number.", clientId);
+                }
+            } else {
+                broadcast("Game is not active. Please start the game first.", clientId);
+            }
+            return true;
+        } else if (message.equalsIgnoreCase("/flip") || message.equalsIgnoreCase("/toss") || message.equalsIgnoreCase("/coin")) {
+            flipCoin(clientId);
+            return true;
+        }
         return false;
+    }
+
+    // arc73 6/4/24 - Implementation #2 - Coin Toss
+    private void flipCoin(long clientId) {
+    String result;
+    if (Math.random() < 0.5) { // Math method generates a random number between 0-1, if the number is less than 0.5 -> Heads. If more than 0.5 -> Tails.
+        result = "Heads";
+    } else {
+        result = "Tails";
+    }
+    broadcast("User[" + clientId + "] flipped a coin and got " + result, clientId); // Output the result to the appropriate client
     }
 
     public static void main(String[] args) {
