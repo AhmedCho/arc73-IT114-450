@@ -147,31 +147,30 @@ public class Server {
         }
         // add more "else if" as needed
         // arc73 6/17/24 - Implementation #1 - Number Guesser
-         else if (message.equalsIgnoreCase("/start")) {
+         else if (message.equalsIgnoreCase("/start")) { //Start command
             if (!gameActive) {
                 gameActive = true;
-                // Generate a random number between 1 and 100 as the hidden number
-                hiddenNumber = new Random().nextInt(100) + 1;
-                broadcast("Number guesser game started! Guess a number between 1 and 100.", clientId);
+                hiddenNumber = new Random().nextInt(50) + 1; // Generate number from 1-50
+                broadcast("Number Guesser Game: Guess a number between 1 and 50.", clientId);
             }
             return true;
-        } else if (message.equalsIgnoreCase("/stop")) {
+        } else if (message.equalsIgnoreCase("/stop")) { //Stop command
             if (gameActive) {
                 gameActive = false;
-                broadcast("Number guesser game stopped. Guesses will be treated as regular messages.", clientId);
+                broadcast("Game ended, only intaking regular messages.", clientId);
             }
             return true;
-        } else if (message.toLowerCase().startsWith("/guess")) {
+        } else if (message.toLowerCase().startsWith("/guess")) { //User enters a guest (i.e. /guess 5)
             if (gameActive) {
                 try {
                     int guess = Integer.parseInt(message.substring(7).trim());
                     String guessResult = (guess == hiddenNumber) ? "correct!" : "incorrect.";
-                    broadcast("User[" + clientId + "] guessed " + guess + ", which was " + guessResult, clientId);
+                    broadcast("User[" + clientId + "] guessed " + guess + ", which was " + guessResult, clientId); //Output client information and guess information
                 } catch (NumberFormatException e) {
-                    broadcast("Invalid guess format. Please provide a number.", clientId);
+                    broadcast("Invalid format, only guess numbers.", clientId); //Denies non-numeric guesses
                 }
             } else {
-                broadcast("Game is not active. Please start the game first.", clientId);
+                broadcast("Inactive, start game.", clientId); //Deactivates game
             }
             return true;
         } else if (message.equalsIgnoreCase("/flip") || message.equalsIgnoreCase("/toss") || message.equalsIgnoreCase("/coin")) {
