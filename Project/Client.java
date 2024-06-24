@@ -55,7 +55,7 @@ public enum Client {
         // and is just for lesson's sake
         return server.isConnected() && !server.isClosed() && !server.isInputShutdown() && !server.isOutputShutdown();
     }
-
+    // arc73 6/24/24 - Client connecting to Server
     /**
      * Takes an IP address and a port to attempt a socket connection to a server.
      * 
@@ -173,6 +173,7 @@ public enum Client {
 
     // send methods to pass data to the ServerThread
 
+    //arc73 6/24/24
     /**
      * Sends the room name we intend to create
      * 
@@ -211,6 +212,7 @@ public enum Client {
      * 
      * @param message
      */
+    // arc73 6/24/24
     private void sendMessage(String message) {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.MESSAGE);
@@ -236,6 +238,7 @@ public enum Client {
      * 
      * @param p
      */
+    // arc73 6/24/24
     private void send(Payload p) {
         try {
             out.writeObject(p);
@@ -247,6 +250,7 @@ public enum Client {
     }
     // end send methods
 
+    // arc73 6/24/24 - Prepares client and waits for user input
     public void start() throws IOException {
         System.out.println("Client starting");
 
@@ -256,7 +260,7 @@ public enum Client {
         // Wait for inputFuture to complete to ensure proper termination
         inputFuture.join();
     }
-
+    // arc73 6/24/24
     /**
      * Listens for messages from the server
      */
@@ -289,6 +293,7 @@ public enum Client {
     /**
      * Listens for keyboard input from the user
      */
+    // arc73 6/24/24
     private void listenToInput() {
         try (Scanner si = new Scanner(System.in)) {
             System.out.println("Waiting for input"); // moved here to avoid console spam
@@ -323,6 +328,7 @@ public enum Client {
     /**
      * Closes the server connection and associated resources
      */
+    // arc73 6/24/24
     private void closeServerConnection() {
         myData.reset();
         knownClients.clear();
@@ -362,7 +368,7 @@ public enum Client {
             e.printStackTrace();
         }
     }
-
+    // arc73 6/24/24
     /**
      * Handles received message from the ServerThread
      * 
@@ -402,7 +408,7 @@ public enum Client {
     }
 
     // payload processors
-
+    // arc73 6/24/24
     private void processDisconnect(long clientId, String clientName) {
         System.out.println(
                 TextFX.colorize(String.format("*%s disconnected*",

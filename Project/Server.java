@@ -21,6 +21,7 @@ public enum Server {
         }));
     }
 
+    // arc73 6/24/24 - Server listening for connections
     private void start(int port) {
         this.port = port;
         // server listening
@@ -47,6 +48,7 @@ public enum Server {
             System.out.println("Closing server socket");
         }
     }
+    // arc73 6/24/24
     /**
      * Gracefully disconnect clients
      */
@@ -79,7 +81,7 @@ public enum Server {
         System.out.println(String.format("Server: *%s[%s] initialized*", sClient.getClientName(), sClient.getClientId()));
         joinRoom(Room.LOBBY, sClient);
     }
-
+    // arc73 6/24/24
     /**
      * Attempts to create a new Room and add it to the tracked rooms collection
      * 
