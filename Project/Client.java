@@ -121,7 +121,7 @@ public enum Client {
                 return true;
             }
             // replaces multiple spaces with a single space
-            // splits on the space after connect (gives us host and port)                                                           //UCID:sa2796  Date: 6-23-24 Milestone 1
+            // splits on the space after connect (gives us host and port)                                                   
             // splits on : to get host as index 0 and port as index 1
             String[] parts = text.trim().replaceAll(" +", " ").split(" ")[1].split(":");
             connect(parts[0].trim(), Integer.parseInt(parts[1].trim()));
@@ -137,7 +137,7 @@ public enum Client {
         } else if (text.equalsIgnoreCase("/users")) {
             System.out.println(
                     String.join("\n", knownClients.values().stream()
-                            .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));      //UCID:sa2796 Date: 7-3-24 Milestone 2
+                            .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));     
             return true;
         }
         else if (text.equalsIgnoreCase("/flip")) {
@@ -146,14 +146,12 @@ public enum Client {
             send(flipPayload);
             System.out.println(TextFX.colorize("Sending FlipPayload", Color.GREEN));
             return true;
-         
-
         } else if (text.startsWith("/roll ")) {
             try {
                 String rollCommand = text.substring(6).trim();
                 int numDice;
                 int numSides;
-    
+        
                 if (rollCommand.contains("d")) {
                     String[] parts = rollCommand.split("d");
                     if (parts.length != 2) {
@@ -165,12 +163,13 @@ public enum Client {
                     numDice = 1;
                     numSides = Integer.parseInt(rollCommand);
                 }
-    
+        
                 RollPayload rollPayload = new RollPayload();
-                rollPayload.setNumDice(numDice); // Number of dice
-                rollPayload.setNumSides(numSides); // Number of sides per die
+                rollPayload.setNumDice(numDice);
+                rollPayload.setNumSides(numSides);
                 rollPayload.setClientId(myData.getClientId());
                 send(rollPayload);
+                System.out.println(TextFX.colorize("Sending RollPayload", Color.GREEN));
             } catch (NumberFormatException e) {
                 System.out.println(TextFX.colorize("Invalid roll format. Use /roll XdY or /roll Y", Color.RED));
             }
