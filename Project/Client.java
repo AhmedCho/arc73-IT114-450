@@ -55,7 +55,7 @@ public enum Client {
         // and is just for lesson's sake
         return server.isConnected() && !server.isClosed() && !server.isInputShutdown() && !server.isOutputShutdown();
     }
-    // arc73 6/24/24 - Client connecting to Server
+
     /**
      * Takes an IP address and a port to attempt a socket connection to a server.
      * 
@@ -112,8 +112,6 @@ public enum Client {
      * @param text
      * @return true if the text was a command or triggered a command
      */
-
-     //arc73 7/8/24
     private boolean processClientCommand(String text) {
         if (isConnection(text)) {
             if (myData.getClientName() == null || myData.getClientName().length() == 0) {
@@ -121,7 +119,7 @@ public enum Client {
                 return true;
             }
             // replaces multiple spaces with a single space
-            // splits on the space after connect (gives us host and port)                                                   
+            // splits on the space after connect (gives us host and port)                                                           //UCID:sa2796  Date: 6-23-24 Milestone 1
             // splits on : to get host as index 0 and port as index 1
             String[] parts = text.trim().replaceAll(" +", " ").split(" ")[1].split(":");
             connect(parts[0].trim(), Integer.parseInt(parts[1].trim()));
@@ -137,7 +135,7 @@ public enum Client {
         } else if (text.equalsIgnoreCase("/users")) {
             System.out.println(
                     String.join("\n", knownClients.values().stream()
-                            .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));     
+                            .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));      //UCID:sa2796 Date: 7-3-24 Milestone 2
             return true;
         }
         else if (text.equalsIgnoreCase("/flip")) {
@@ -146,12 +144,14 @@ public enum Client {
             send(flipPayload);
             System.out.println(TextFX.colorize("Sending FlipPayload", Color.GREEN));
             return true;
+         
+
         } else if (text.startsWith("/roll ")) {
             try {
                 String rollCommand = text.substring(6).trim();
                 int numDice;
                 int numSides;
-        
+    
                 if (rollCommand.contains("d")) {
                     String[] parts = rollCommand.split("d");
                     if (parts.length != 2) {
@@ -163,13 +163,12 @@ public enum Client {
                     numDice = 1;
                     numSides = Integer.parseInt(rollCommand);
                 }
-        
+    
                 RollPayload rollPayload = new RollPayload();
-                rollPayload.setNumDice(numDice);
-                rollPayload.setNumSides(numSides);
+                rollPayload.setNumDice(numDice); // Number of dice
+                rollPayload.setNumSides(numSides); // Number of sides per die
                 rollPayload.setClientId(myData.getClientId());
                 send(rollPayload);
-                System.out.println(TextFX.colorize("Sending RollPayload", Color.GREEN));
             } catch (NumberFormatException e) {
                 System.out.println(TextFX.colorize("Invalid roll format. Use /roll XdY or /roll Y", Color.RED));
             }
@@ -208,9 +207,9 @@ public enum Client {
         }
         return false;
     }
+
     // send methods to pass data to the ServerThread
 
-    //arc73 6/24/24
     /**
      * Sends the room name we intend to create
      * 
@@ -249,7 +248,6 @@ public enum Client {
      * 
      * @param message
      */
-    // arc73 6/24/24
     private void sendMessage(String message) {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.MESSAGE);
@@ -275,7 +273,6 @@ public enum Client {
      * 
      * @param p
      */
-    // arc73 6/24/24
     private void send(Payload p) {
         try {
             out.writeObject(p);
@@ -287,7 +284,6 @@ public enum Client {
     }
     // end send methods
 
-    // arc73 6/24/24 - Prepares client and waits for user input
     public void start() throws IOException {
         System.out.println("Client starting");
 
@@ -297,11 +293,11 @@ public enum Client {
         // Wait for inputFuture to complete to ensure proper termination
         inputFuture.join();
     }
-    // arc73 6/24/24
+
     /**
-     * Listens for messages from the server
+     * Listens for messages from the server 
      */
-    private void listenToServer() {
+    private void listenToServer() {   //UCID: sa2796 Date: 6-23-24
         try {
             while (isRunning && isConnected()) {
                 Payload fromServer = (Payload) in.readObject(); // blocking read
@@ -330,8 +326,7 @@ public enum Client {
     /**
      * Listens for keyboard input from the user
      */
-    // arc73 6/24/24
-    private void listenToInput() {
+    private void listenToInput() {                 //UCID: sa2796   Date: 6-23-24
         try (Scanner si = new Scanner(System.in)) {
             System.out.println("Waiting for input"); // moved here to avoid console spam
             while (isRunning) { // Run until isRunning is false
@@ -355,7 +350,7 @@ public enum Client {
     /**
      * Closes the client connection and associated resources
      */
-    private void close() {
+    private void close() {      //UCID:sa2796  Date: 6-23-24
         isRunning = false;
         closeServerConnection();
         System.out.println("Client terminated");
@@ -365,8 +360,7 @@ public enum Client {
     /**
      * Closes the server connection and associated resources
      */
-    // arc73 6/24/24
-    private void closeServerConnection() {
+    private void closeServerConnection() {  ////UCID: sa2796   Date: 6-23-24
         myData.reset();
         knownClients.clear();
         try {
@@ -405,7 +399,7 @@ public enum Client {
             e.printStackTrace();
         }
     }
-    // arc73 6/24/24
+
     /**
      * Handles received message from the ServerThread
      * 
@@ -445,7 +439,7 @@ public enum Client {
     }
 
     // payload processors
-    // arc73 6/24/24
+
     private void processDisconnect(long clientId, String clientName) {
         System.out.println(
                 TextFX.colorize(String.format("*%s disconnected*",

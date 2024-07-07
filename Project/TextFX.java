@@ -32,6 +32,9 @@ public abstract class TextFX {
     }
 
     public static final String RESET = "\033[0m";
+    public static final String BOLD = "\033[1m";
+    public static final String ITALIC = "\033[3m";
+    public static final String UNDERLINE = "\033[4m";
 
     /**
      * Generates a String with the original message wrapped in the ASCII of the
@@ -45,17 +48,29 @@ public abstract class TextFX {
      * @return wrapped String
      */
     public static String colorize(String text, Color color) {
-        StringBuilder builder = new StringBuilder();
-        builder.append(color.getCode());
-        builder.append(text);
-        builder.append(RESET);
-        return builder.toString();
+        return color.getCode() + text + RESET;
     }
+
+    public static String applyBold(String text) {
+        return BOLD + text + RESET;
+    }
+
+    public static String applyItalic(String text) {
+        return ITALIC + text + RESET;
+    }
+
+    public static String applyUnderline(String text) {
+        return UNDERLINE + text + RESET;
+    }
+
 
     public static void main(String[] args) {
         // Example usage:
         System.out.println(TextFX.colorize("Hello, world!", Color.RED));
         System.out.println(TextFX.colorize("This is some blue text.", Color.BLUE));
         System.out.println(TextFX.colorize("And this is green!", Color.GREEN));
+        System.out.println(TextFX.applyBold("This is bold text."));
+        System.out.println(TextFX.applyItalic("This is italic text."));
+        System.out.println(TextFX.applyUnderline("This is underlined text."));
     }
 }

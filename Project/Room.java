@@ -3,13 +3,14 @@ package Project;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Random;
 
+
 public class Room implements AutoCloseable{
     private String name;// unique name of the Room
     private volatile boolean isRunning = false;
     private ConcurrentHashMap<Long, ServerThread> clientsInRoom = new ConcurrentHashMap<Long, ServerThread>();
+    private Random random = new Random();
 
     public final static String LOBBY = "lobby";
-    private Random random = new Random();
 
     private void info(String message) {
         System.out.println(String.format("Room[%s]: %s", name, message));
@@ -24,6 +25,21 @@ public class Room implements AutoCloseable{
     public String getName() {
         return this.name;
     }
+
+   private String processTextEffects(String message) {
+        message = message.replaceAll("\\*\\*(.+?)\\*\\*", "<b>$1</b>"); 
+        message = message.replaceAll("\\*(.+?)\\*", "<i>$1</i>"); 
+        message = message.replaceAll("_(.+?)_", "<u>$1</u>"); 
+        message = message.replaceAll("#r(.+?)r#", "<red>$1</red>"); 
+        message = message.replaceAll("#g(.+?)g#", "<green>$1</green>"); 
+        message = message.replaceAll("#b(.+?)b#", "<blue>$1</blue>");                       
+        
+        message = message.replaceAll("\\*\\*_\\*(.+?)\\*_\\*\\*", "<b><i><u>$1</u></i></b>");
+        message = message.replaceAll("\\*#r(.+?)r#\\*", "<b><red>$1</red></b>");
+        return message;
+    }
+
+    
 
     protected synchronized void addClient(ServerThread client) {
         if (!isRunning) { // block action if Room isn't running
@@ -190,30 +206,30 @@ public class Room implements AutoCloseable{
 
         // Note: any desired changes to the message must be done before this section
         long senderId = sender == null ? ServerThread.DEFAULT_CLIENT_ID : sender.getClientId();
-
+        final String[] messageToSend = { processTextEffects(message) };
         // loop over clients and send out the message; remove client if message failed
         // to be sent
         // Note: this uses a lambda expression for each item in the values() collection,
         // it's one way we can safely remove items during iteration
-        info(String.format("sending message to %s recipients: %s", getName(), clientsInRoom.size(), message));
+        info(String.format("sending message to %s recipients: %s", getName(), clientsInRoom.size(), messageToSend[0]));
         clientsInRoom.values().removeIf(client -> {
-            boolean failedToSend = !client.sendMessage(senderId, message);
+            boolean failedToSend = !client.sendMessage(senderId, messageToSend[0]);
             if (failedToSend) {
                 info(String.format("Removing disconnected client[%s] from list", client.getClientId()));
                 disconnect(client);
-            }
-            return failedToSend;
-        });
+        }
+        return failedToSend;
+    });
     }
     // end send data to client(s)
 
-    //arc73 7/8/24 - Flip/Roll Commands
+
     protected synchronized void handleFlip(ServerThread sender, FlipPayload flipPayload) {
         String result = random.nextBoolean() ? "heads" : "tails";
         String message = String.format("%s flipped a coin and got %s", sender.getClientName(), result);
         sendMessage(null, message);
     }
-
+    
     protected synchronized void handleRoll(ServerThread sender, RollPayload rollPayload) {
         int numDice = rollPayload.getNumDice();
         int numSides = rollPayload.getNumSides();
@@ -230,10 +246,8 @@ public class Room implements AutoCloseable{
         sendMessage(null, resultMessage.toString());
     }
     
-
-    // arc73 6/24/24
     // receive data from ServerThread
-    protected void handleCreateRoom(ServerThread sender, String room) {
+    protected void handleCreateRoom(ServerThread sender, String room) {     
         if (Server.INSTANCE.createRoom(room)) {
             Server.INSTANCE.joinRoom(room, sender);
         } else {

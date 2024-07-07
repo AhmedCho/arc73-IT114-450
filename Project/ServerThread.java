@@ -82,9 +82,8 @@ public class ServerThread extends BaseServerThread {
         super.disconnect();
     }
     // handle received message from the Client
-    // arc73 6/24/24
     @Override
-    protected void processPayload(Payload payload) {
+    protected void processPayload(Payload payload) {   
         try {
             switch (payload.getPayloadType()) {
                 case CLIENT_CONNECT:
@@ -102,14 +101,13 @@ public class ServerThread extends BaseServerThread {
                     break;
                 case DISCONNECT:
                     currentRoom.disconnect(this);
-                    break;
+                    break;          
                 case ROLL:                                                         
                     if (payload instanceof RollPayload) {
                         RollPayload rollPayload = (RollPayload) payload;
                         System.out.println("Received RollPayload from client");
                         currentRoom.handleRoll(this, rollPayload);
                     }
-                    break;
                 case FLIP:
                     if (payload instanceof FlipPayload) {
                         FlipPayload flipPayload = (FlipPayload) payload;
