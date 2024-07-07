@@ -208,6 +208,12 @@ public class Room implements AutoCloseable{
     // end send data to client(s)
 
     //arc73 7/8/24 - Flip/Roll Commands
+    protected synchronized void handleFlip(ServerThread sender, FlipPayload flipPayload) {
+        String result = random.nextBoolean() ? "heads" : "tails";
+        String message = String.format("%s flipped a coin and got %s", sender.getClientName(), result);
+        sendMessage(null, message);
+    }
+
     protected synchronized void handleRoll(ServerThread sender, RollPayload rollPayload) {
         int numDice = rollPayload.getNumDice();
         int numSides = rollPayload.getNumSides();

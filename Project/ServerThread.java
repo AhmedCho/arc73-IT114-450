@@ -103,6 +103,19 @@ public class ServerThread extends BaseServerThread {
                 case DISCONNECT:
                     currentRoom.disconnect(this);
                     break;
+                case ROLL:                                                         
+                    if (payload instanceof RollPayload) {
+                        RollPayload rollPayload = (RollPayload) payload;
+                        System.out.println("Received RollPayload from client");
+                        currentRoom.handleRoll(this, rollPayload);
+                    }
+                case FLIP:
+                    if (payload instanceof FlipPayload) {
+                        FlipPayload flipPayload = (FlipPayload) payload;
+                        System.out.println("Received FlipPayload from client: " + flipPayload);
+                        currentRoom.handleFlip(this, flipPayload);
+                    }
+                    break;
                 default:
                     break;
             }

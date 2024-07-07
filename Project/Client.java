@@ -137,6 +137,45 @@ public enum Client {
                     String.join("\n", knownClients.values().stream()
                             .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));
             return true;
+        } 
+        
+        //arc73 7/8/24 - Flip/Roll Commands 
+        else if (text.equalsIgnoreCase("/flip")) {
+            FlipPayload flipPayload = new FlipPayload();
+            flipPayload.setClientId(myData.getClientId());
+            send(flipPayload);
+            System.out.println(TextFX.colorize("Sending FlipPayload", Color.GREEN));
+            return true;
+         
+
+        } else if (text.startsWith("/roll ")) {
+            try {
+                String rollCommand = text.substring(6).trim();
+                int numDice;
+                int numSides;
+    
+                if (rollCommand.contains("d")) {
+                    String[] parts = rollCommand.split("d");
+                    if (parts.length != 2) {
+                        throw new NumberFormatException();
+                    }
+                    numDice = Integer.parseInt(parts[0]);
+                    numSides = Integer.parseInt(parts[1]);
+                } else {
+                    numDice = 1;
+                    numSides = Integer.parseInt(rollCommand);
+                }
+    
+                RollPayload rollPayload = new RollPayload();
+                rollPayload.setNumDice(numDice); // Number of dice
+                rollPayload.setNumSides(numSides); // Number of sides per die
+                rollPayload.setClientId(myData.getClientId());
+                send(rollPayload);
+            } catch (NumberFormatException e) {
+                System.out.println(TextFX.colorize("Invalid roll format. Use /roll XdY or /roll Y", Color.RED));
+            }
+            return true;
+
         } else { // logic previously from Room.java
             // decided to make this as separate block to separate the core client-side items
             // vs the ones that generally are used after connection and that send requests
