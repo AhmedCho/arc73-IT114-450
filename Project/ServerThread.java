@@ -109,6 +109,7 @@ public class ServerThread extends BaseServerThread {
                         System.out.println("Received RollPayload from client");
                         currentRoom.handleRoll(this, rollPayload);
                     }
+                    break;
                 case FLIP:
                     if (payload instanceof FlipPayload) {
                         FlipPayload flipPayload = (FlipPayload) payload;
