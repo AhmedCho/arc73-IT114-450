@@ -1,6 +1,7 @@
 package Project;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Random;
 
 public class Room implements AutoCloseable{
     private String name;// unique name of the Room
@@ -8,6 +9,7 @@ public class Room implements AutoCloseable{
     private ConcurrentHashMap<Long, ServerThread> clientsInRoom = new ConcurrentHashMap<Long, ServerThread>();
 
     public final static String LOBBY = "lobby";
+    private Random random = new Random();
 
     private void info(String message) {
         System.out.println(String.format("Room[%s]: %s", name, message));
@@ -204,6 +206,24 @@ public class Room implements AutoCloseable{
         });
     }
     // end send data to client(s)
+
+    //arc73 7/8/24 - Flip/Roll Commands
+    protected synchronized void handleRoll(ServerThread sender, RollPayload rollPayload) {
+        int numDice = rollPayload.getNumDice();
+        int numSides = rollPayload.getNumSides();
+        StringBuilder resultMessage = new StringBuilder(String.format("%s rolled %dd%d and got", sender.getClientName(), numDice, numSides));      
+        int total = 0;
+    
+        for (int i = 0; i < numDice; i++) {
+            int rollResult = random.nextInt(numSides) + 1;
+            total += rollResult;
+            resultMessage.append(" ").append(rollResult);
+        }
+    
+        resultMessage.append(" (total: ").append(total).append(")");
+        sendMessage(null, resultMessage.toString());
+    }
+    
 
     // arc73 6/24/24
     // receive data from ServerThread
