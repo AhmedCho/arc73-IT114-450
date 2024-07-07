@@ -112,6 +112,8 @@ public enum Client {
      * @param text
      * @return true if the text was a command or triggered a command
      */
+
+     //arc73 7/8/24
     private boolean processClientCommand(String text) {
         if (isConnection(text)) {
             if (myData.getClientName() == null || myData.getClientName().length() == 0) {
@@ -119,7 +121,7 @@ public enum Client {
                 return true;
             }
             // replaces multiple spaces with a single space
-            // splits on the space after connect (gives us host and port)
+            // splits on the space after connect (gives us host and port)                                                           //UCID:sa2796  Date: 6-23-24 Milestone 1
             // splits on : to get host as index 0 and port as index 1
             String[] parts = text.trim().replaceAll(" +", " ").split(" ")[1].split(":");
             connect(parts[0].trim(), Integer.parseInt(parts[1].trim()));
@@ -135,11 +137,9 @@ public enum Client {
         } else if (text.equalsIgnoreCase("/users")) {
             System.out.println(
                     String.join("\n", knownClients.values().stream()
-                            .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));
+                            .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));      //UCID:sa2796 Date: 7-3-24 Milestone 2
             return true;
-        } 
-        
-        //arc73 7/8/24 - Flip/Roll Commands 
+        }
         else if (text.equalsIgnoreCase("/flip")) {
             FlipPayload flipPayload = new FlipPayload();
             flipPayload.setClientId(myData.getClientId());
@@ -209,7 +209,6 @@ public enum Client {
         }
         return false;
     }
-
     // send methods to pass data to the ServerThread
 
     //arc73 6/24/24
