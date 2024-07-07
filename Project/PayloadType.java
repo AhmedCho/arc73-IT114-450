@@ -7,5 +7,7 @@ public enum PayloadType {
     DISCONNECT,  // distinct disconnect action
     ROOM_CREATE,
     ROOM_JOIN, // join/leave room based on boolean
-    MESSAGE // sender and message
+    MESSAGE, // sender and message
+    ROLL, //command for rolling a random value
+    FLIP, //command for flipping a coin
 }
