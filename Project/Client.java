@@ -119,7 +119,7 @@ public enum Client {
                 return true;
             }
             // replaces multiple spaces with a single space
-            // splits on the space after connect (gives us host and port)                                                           //UCID:sa2796  Date: 6-23-24 Milestone 1
+            // splits on the space after connect (gives us host and port)                                                         
             // splits on : to get host as index 0 and port as index 1
             String[] parts = text.trim().replaceAll(" +", " ").split(" ")[1].split(":");
             connect(parts[0].trim(), Integer.parseInt(parts[1].trim()));
@@ -135,48 +135,55 @@ public enum Client {
         } else if (text.equalsIgnoreCase("/users")) {
             System.out.println(
                     String.join("\n", knownClients.values().stream()
-                            .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));      //UCID:sa2796 Date: 7-3-24 Milestone 2
+                            .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));     
             return true;
         }
-        else if (text.equalsIgnoreCase("/flip")) {
-            FlipPayload flipPayload = new FlipPayload();
-            flipPayload.setClientId(myData.getClientId());
-            send(flipPayload);
-            System.out.println(TextFX.colorize("Sending FlipPayload", Color.GREEN));
-            return true;
-         
 
-        } else if (text.startsWith("/roll ")) {
+        // arc73 7/8/24 - Handling Flip Command
+        else if (text.equalsIgnoreCase("/flip")) { //checks if user enters "/flip" and ignores case differences
+            FlipPayload flipPayload = new FlipPayload(); // creates flip payload object
+            flipPayload.setClientId(myData.getClientId());
+            send(flipPayload); // sends flip payload to server to process command
+            System.out.println(TextFX.colorize("FlipPayload being sent...", Color.RED)); //Output to the console that the Flip Payload is being sent, colored in Red
+            return true; // Return true if command is handled
+         
+        // arc73 7/8/24 - Handling Roll Command
+        } else if (text.startsWith("/roll ")) { //checks if user enters command starting with "/roll"
             try {
                 String rollCommand = text.substring(6).trim();
-                int numDice;
-                int numSides;
+                int Dicenumber; //Initializes variable for number of dice
+                int Sidesnumber; //Initializes variable for number sides of each die
     
-                if (rollCommand.contains("d")) {
-                    String[] parts = rollCommand.split("d");
+                if (rollCommand.contains("d")) { //Checks if user entered 'd' which refers to  /roll #d# format
+                    String[] parts = rollCommand.split("d"); //Splits into number of dice and sides
                     if (parts.length != 2) {
-                        throw new NumberFormatException();
+                        throw new NumberFormatException(); //Throw an exception if format is incorrect
                     }
-                    numDice = Integer.parseInt(parts[0]);
-                    numSides = Integer.parseInt(parts[1]);
+                    //Split both parts of the dice and sides
+                    Dicenumber = Integer.parseInt(parts[0]);
+                    Sidesnumber = Integer.parseInt(parts[1]);
                 } else {
-                    numDice = 1;
-                    numSides = Integer.parseInt(rollCommand);
+                    //If no "d" detected, then default value of the number of dice is 1
+                    Dicenumber = 1;
+                    Sidesnumber = Integer.parseInt(rollCommand);
                 }
-    
+                //Create a new object
                 RollPayload rollPayload = new RollPayload();
-                rollPayload.setNumDice(numDice); // Number of dice
-                rollPayload.setNumSides(numSides); // Number of sides per die
+                //Set number of dice
+                rollPayload.setDicenumber(Dicenumber);
+                //Set number of sides of each die
+                rollPayload.setSidesnumber(Sidesnumber);
+                //Set Client ID
                 rollPayload.setClientId(myData.getClientId());
+                //Send payload to server
                 send(rollPayload);
             } catch (NumberFormatException e) {
-                System.out.println(TextFX.colorize("Invalid roll format. Use /roll XdY or /roll Y", Color.RED));
+                //Print error in green if roll format is invalid
+                System.out.println(TextFX.colorize("Incorrectly typed format. Only use '/roll #' or '/roll #d#'", Color.GREEN));
             }
             return true;
 
-        } else { // logic previously from Room.java
-            // decided to make this as separate block to separate the core client-side items
-            // vs the ones that generally are used after connection and that send requests
+        } else {
             if (text.startsWith(COMMAND_CHARACTER)) {
                 boolean wasCommand = false;
                 String fullCommand = text.replace(COMMAND_CHARACTER, "");
@@ -297,7 +304,7 @@ public enum Client {
     /**
      * Listens for messages from the server 
      */
-    private void listenToServer() {   //UCID: sa2796 Date: 6-23-24
+    private void listenToServer() {  
         try {
             while (isRunning && isConnected()) {
                 Payload fromServer = (Payload) in.readObject(); // blocking read
@@ -326,7 +333,7 @@ public enum Client {
     /**
      * Listens for keyboard input from the user
      */
-    private void listenToInput() {                 //UCID: sa2796   Date: 6-23-24
+    private void listenToInput() {           
         try (Scanner si = new Scanner(System.in)) {
             System.out.println("Waiting for input"); // moved here to avoid console spam
             while (isRunning) { // Run until isRunning is false
@@ -350,7 +357,7 @@ public enum Client {
     /**
      * Closes the client connection and associated resources
      */
-    private void close() {      //UCID:sa2796  Date: 6-23-24
+    private void close() {   
         isRunning = false;
         closeServerConnection();
         System.out.println("Client terminated");
@@ -360,7 +367,7 @@ public enum Client {
     /**
      * Closes the server connection and associated resources
      */
-    private void closeServerConnection() {  ////UCID: sa2796   Date: 6-23-24
+    private void closeServerConnection() {  
         myData.reset();
         knownClients.clear();
         try {

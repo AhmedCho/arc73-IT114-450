@@ -231,13 +231,13 @@ public class Room implements AutoCloseable{
     }
     
     protected synchronized void handleRoll(ServerThread sender, RollPayload rollPayload) {
-        int numDice = rollPayload.getNumDice();
-        int numSides = rollPayload.getNumSides();
-        StringBuilder resultMessage = new StringBuilder(String.format("%s rolled %dd%d and got", sender.getClientName(), numDice, numSides));      
+        int Dicenumber = rollPayload.getDicenumber();
+        int Sidesnumber = rollPayload.getSidesnumber();
+        StringBuilder resultMessage = new StringBuilder(String.format("%s rolled %dd%d and got", sender.getClientName(), Dicenumber, Sidesnumber));      
         int total = 0;
     
-        for (int i = 0; i < numDice; i++) {
-            int rollResult = random.nextInt(numSides) + 1;
+        for (int i = 0; i < Dicenumber; i++) {
+            int rollResult = random.nextInt(Sidesnumber) + 1;
             total += rollResult;
             resultMessage.append(" ").append(rollResult);
         }

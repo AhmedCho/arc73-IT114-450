@@ -1,31 +1,33 @@
 package Project;
-
+//arc73 7/8/24
 public class RollPayload extends Payload {
-    private int numDice;
-    private int numSides;
-
+    //Number of dice being rolled
+    private int Dicenumber;
+    //Number of sides on each die
+    private int Sidesnumber;
+    // Constructor sets payload type to ROLL
     public RollPayload() {
         setPayloadType(PayloadType.ROLL);              
     }
-
-    public int getNumDice() {
-        return numDice;
+    //Getter - # of Dice
+    public int getDicenumber() {
+        return Dicenumber;
     }
-
-    public void setNumDice(int numDice) {
-        this.numDice = numDice;
+    //Setter - # of Dice
+    public void setDicenumber(int Dicenumber) {
+        this.Dicenumber = Dicenumber;
     }
-
-    public int getNumSides() {
-        return numSides;
+    //Getter - # of Sides each die
+    public int getSidesnumber() {
+        return Sidesnumber;
     }
-
-    public void setNumSides(int numSides) {
-        this.numSides = numSides;
+    //Setter - # of Sides each die
+    public void setSidesnumber(int Sidesnumber) {
+        this.Sidesnumber = Sidesnumber;
     }
-
+    //String output of RollPayload object
     @Override
     public String toString() {
-        return String.format("RollPayload [numDice=%d, numSides=%d]", numDice, numSides);
+        return "RollPayload [Dicenumber=" + Dicenumber + ", Sidesnumber=" + Sidesnumber + "]";
     }
 }
