@@ -1,7 +1,7 @@
 package Project;
 
 import java.io.Serializable;
-//arc73
+
 public class Payload implements Serializable {
     private static final long serialVersionUID = 1L;
     private PayloadType payloadType;

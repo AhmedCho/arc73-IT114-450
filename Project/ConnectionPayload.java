@@ -1,5 +1,5 @@
 package Project;
-//arc73
+
 public class ConnectionPayload extends Payload {
     private String clientName;
     private boolean isConnect;

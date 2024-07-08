@@ -1,5 +1,5 @@
 package Project;
-//arc73
+
 public enum PayloadType {
     CLIENT_CONNECT, // client requesting to connect to server (passing of initialization data [name])
     CLIENT_ID,  // server sending client id

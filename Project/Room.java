@@ -3,7 +3,7 @@ package Project;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.Random;
 
-//arc73
+
 public class Room implements AutoCloseable{
     private String name;// unique name of the Room
     private volatile boolean isRunning = false;
