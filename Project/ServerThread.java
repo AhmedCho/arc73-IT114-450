@@ -3,7 +3,7 @@ package Project;
 import java.net.Socket;
 import java.util.Objects;
 import java.util.function.Consumer;
-
+//arc73
 /**
  * A server-side representation of a single client.
  * This class is more about the data and abstracted communication
