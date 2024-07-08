@@ -15,14 +15,13 @@ public enum Server {
     private long nextClientId = 1;
 
     private Server(){
-        Runtime.getRuntime().addShutdownHook(new Thread(() -> {
+        Runtime.getRuntime().addShutdownHook(new Thread(() -> {    
             System.out.println("JVM is shutting down. Perform cleanup tasks.");
             shutdown();
         }));
     }
 
-    // arc73 6/24/24 - Server listening for connections
-    private void start(int port) {
+    private void start(int port) {                
         this.port = port;
         // server listening
         System.out.println("Listening on port " + this.port);
@@ -48,7 +47,6 @@ public enum Server {
             System.out.println("Closing server socket");
         }
     }
-    // arc73 6/24/24
     /**
      * Gracefully disconnect clients
      */
@@ -81,7 +79,7 @@ public enum Server {
         System.out.println(String.format("Server: *%s[%s] initialized*", sClient.getClientName(), sClient.getClientId()));
         joinRoom(Room.LOBBY, sClient);
     }
-    // arc73 6/24/24
+
     /**
      * Attempts to create a new Room and add it to the tracked rooms collection
      * 
