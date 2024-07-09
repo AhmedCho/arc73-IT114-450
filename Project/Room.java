@@ -1,11 +1,14 @@
 package Project;
 
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.Random;
+
 
 public class Room implements AutoCloseable{
     private String name;// unique name of the Room
     private volatile boolean isRunning = false;
     private ConcurrentHashMap<Long, ServerThread> clientsInRoom = new ConcurrentHashMap<Long, ServerThread>();
+    private Random random = new Random();
 
     public final static String LOBBY = "lobby";
 
@@ -18,10 +21,25 @@ public class Room implements AutoCloseable{
         isRunning = true;
         System.out.println(String.format("Room[%s] created", this.name));
     }
-
     public String getName() {
         return this.name;
     }
+
+
+    // arc73 7/8/24
+   private String processTextEffects(String message) {
+        message = message.replaceAll("#r(.+?)r#", "<red>$1</red>"); //#r[text]r# for blue text
+        message = message.replaceAll("#g(.+?)g#", "<green>$1</green>"); //#g[text]g# for green text
+        message = message.replaceAll("#b(.+?)b#", "<blue>$1</blue>"); //#b[text]b# for blue text
+        message = message.replaceAll("\\*\\*(.+?)\\*\\*", "<b>$1</b>"); // Double asterisk for bold text
+        message = message.replaceAll("\\*(.+?)\\*", "<i>$1</i>");  //Single asterisk for italic text
+        message = message.replaceAll("_(.+?)_", "<u>$1</u>"); // Underscore for underlined text                      
+        message = message.replaceAll("\\*\\*_\\*(.+?)\\*_\\*\\*", "<b><i><u>$1</u></i></b>"); //Replaces with bold/italic/underlined tags
+        message = message.replaceAll("\\*#r(.+?)r#\\*", "<b><red>$1</red></b>"); //Replaces with color HTML tags
+        return message; // returns processed message
+    }
+
+    
 
     protected synchronized void addClient(ServerThread client) {
         if (!isRunning) { // block action if Room isn't running
@@ -188,26 +206,61 @@ public class Room implements AutoCloseable{
 
         // Note: any desired changes to the message must be done before this section
         long senderId = sender == null ? ServerThread.DEFAULT_CLIENT_ID : sender.getClientId();
-
+        final String[] messageToSend = { processTextEffects(message) };
         // loop over clients and send out the message; remove client if message failed
         // to be sent
         // Note: this uses a lambda expression for each item in the values() collection,
         // it's one way we can safely remove items during iteration
-        info(String.format("sending message to %s recipients: %s", getName(), clientsInRoom.size(), message));
+        info(String.format("sending message to %s recipients: %s", getName(), clientsInRoom.size(), messageToSend[0]));
         clientsInRoom.values().removeIf(client -> {
-            boolean failedToSend = !client.sendMessage(senderId, message);
+            boolean failedToSend = !client.sendMessage(senderId, messageToSend[0]);
             if (failedToSend) {
                 info(String.format("Removing disconnected client[%s] from list", client.getClientId()));
                 disconnect(client);
-            }
-            return failedToSend;
-        });
+        }
+        return failedToSend;
+    });
     }
     // end send data to client(s)
 
-    // arc73 6/24/24
+
+    // arc73 7/8/24 - Handles FlipPayload
+    //Handle Flip Method
+    protected synchronized void handleFlip(ServerThread sender, FlipPayload flipPayload) {
+        // Determines result of flip, either heads or tails
+        String result = random.nextBoolean() ? "heads" : "tails";
+        // Writes a message to the console which displays the result of the flip
+        String message = String.format("%s flipped a coin and got %s", sender.getClientName(), result);
+        // Message sent to clients connected to room
+        sendMessage(null, message);
+    }
+    
+
+    //arc73 7/8/24 - Handles RollPayload
+    //Handle Roll Method
+    protected synchronized void handleRoll(ServerThread sender, RollPayload rollPayload) {
+        //Gets number of dice from payload
+        int Dicenumber = rollPayload.getDicenumber();
+        //Gets number of sides of each die from payload
+        int Sidesnumber = rollPayload.getSidesnumber();
+        // Writes a message to the console indicating the result of the roll
+        StringBuilder resultMessage = new StringBuilder(String.format("%s rolled %dd%d and got", sender.getClientName(), Dicenumber, Sidesnumber));      
+        int total = 0;
+        //for-loop iterates through the number of dice specified by the user and the result is appended to the total
+        for (int i = 0; i < Dicenumber; i++) {
+            // Adds result from each die of the side landed on
+            int rollResult = random.nextInt(Sidesnumber) + 1;
+            //Roll result added to total
+            total += rollResult;
+            resultMessage.append(" ").append(rollResult);
+        }
+        // Total is added to the message which is written to the console
+        resultMessage.append(" (total: ").append(total).append(")");
+        sendMessage(null, resultMessage.toString());
+    }
+    
     // receive data from ServerThread
-    protected void handleCreateRoom(ServerThread sender, String room) {
+    protected void handleCreateRoom(ServerThread sender, String room) {     
         if (Server.INSTANCE.createRoom(room)) {
             Server.INSTANCE.joinRoom(room, sender);
         } else {

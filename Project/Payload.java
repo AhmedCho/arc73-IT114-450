@@ -3,6 +3,7 @@ package Project;
 import java.io.Serializable;
 
 public class Payload implements Serializable {
+    private static final long serialVersionUID = 1L;
     private PayloadType payloadType;
     private long clientId;
     private String message;
@@ -22,8 +23,8 @@ public class Payload implements Serializable {
 
 
     public long getClientId() {
-        return clientId;
-    }
+        return clientId;                                                       
+    }              
 
 
 

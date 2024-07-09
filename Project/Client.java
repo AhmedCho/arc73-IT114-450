@@ -55,7 +55,7 @@ public enum Client {
         // and is just for lesson's sake
         return server.isConnected() && !server.isClosed() && !server.isInputShutdown() && !server.isOutputShutdown();
     }
-    // arc73 6/24/24 - Client connecting to Server
+
     /**
      * Takes an IP address and a port to attempt a socket connection to a server.
      * 
@@ -119,7 +119,7 @@ public enum Client {
                 return true;
             }
             // replaces multiple spaces with a single space
-            // splits on the space after connect (gives us host and port)
+            // splits on the space after connect (gives us host and port)                                                         
             // splits on : to get host as index 0 and port as index 1
             String[] parts = text.trim().replaceAll(" +", " ").split(" ")[1].split(":");
             connect(parts[0].trim(), Integer.parseInt(parts[1].trim()));
@@ -135,11 +135,55 @@ public enum Client {
         } else if (text.equalsIgnoreCase("/users")) {
             System.out.println(
                     String.join("\n", knownClients.values().stream()
-                            .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));
+                            .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));     
             return true;
-        } else { // logic previously from Room.java
-            // decided to make this as separate block to separate the core client-side items
-            // vs the ones that generally are used after connection and that send requests
+        }
+
+        // arc73 7/8/24 - Handling Flip Command
+        else if (text.equalsIgnoreCase("/flip")) { //checks if user enters "/flip" and ignores case differences
+            FlipPayload flipPayload = new FlipPayload(); // creates flip payload object
+            flipPayload.setClientId(myData.getClientId());
+            send(flipPayload); // sends flip payload to server to process command
+            System.out.println(TextFX.colorize("Sending FlipPayload", Color.BLUE)); //Output to the console that the Flip Payload is being sent, colored in Blue
+            return true; // Return true if command is handled
+         
+        // arc73 7/8/24 - Handling Roll Command
+        } else if (text.startsWith("/roll ")) { //checks if user enters command starting with "/roll"
+            try {
+                String rollCommand = text.substring(6).trim();
+                int Dicenumber; //Initializes variable for number of dice
+                int Sidesnumber; //Initializes variable for number sides of each die
+    
+                if (rollCommand.contains("d")) { //Checks if user entered 'd' which refers to  /roll #d# format
+                    String[] parts = rollCommand.split("d"); //Splits into number of dice and sides
+                    if (parts.length != 2) {
+                        throw new NumberFormatException(); //Throw an exception if format is incorrect
+                    }
+                    //Split both parts of the dice and sides
+                    Dicenumber = Integer.parseInt(parts[0]);
+                    Sidesnumber = Integer.parseInt(parts[1]);
+                } else {
+                    //If no "d" detected, then default value of the number of dice is 1
+                    Dicenumber = 1;
+                    Sidesnumber = Integer.parseInt(rollCommand);
+                }
+                //Create a new object
+                RollPayload rollPayload = new RollPayload();
+                //Set number of dice
+                rollPayload.setDicenumber(Dicenumber);
+                //Set number of sides of each die
+                rollPayload.setSidesnumber(Sidesnumber);
+                //Set Client ID
+                rollPayload.setClientId(myData.getClientId());
+                //Send payload to server
+                send(rollPayload);
+            } catch (NumberFormatException e) {
+                //Print error in red if roll format is invalid
+                System.out.println(TextFX.colorize("Incorrectly typed format. Only use '/roll #' or '/roll #d#'", Color.RED));
+            }
+            return true;
+
+        } else {
             if (text.startsWith(COMMAND_CHARACTER)) {
                 boolean wasCommand = false;
                 String fullCommand = text.replace(COMMAND_CHARACTER, "");
@@ -173,7 +217,6 @@ public enum Client {
 
     // send methods to pass data to the ServerThread
 
-    //arc73 6/24/24
     /**
      * Sends the room name we intend to create
      * 
@@ -212,7 +255,6 @@ public enum Client {
      * 
      * @param message
      */
-    // arc73 6/24/24
     private void sendMessage(String message) {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.MESSAGE);
@@ -238,7 +280,6 @@ public enum Client {
      * 
      * @param p
      */
-    // arc73 6/24/24
     private void send(Payload p) {
         try {
             out.writeObject(p);
@@ -250,7 +291,6 @@ public enum Client {
     }
     // end send methods
 
-    // arc73 6/24/24 - Prepares client and waits for user input
     public void start() throws IOException {
         System.out.println("Client starting");
 
@@ -260,11 +300,11 @@ public enum Client {
         // Wait for inputFuture to complete to ensure proper termination
         inputFuture.join();
     }
-    // arc73 6/24/24
+
     /**
-     * Listens for messages from the server
+     * Listens for messages from the server 
      */
-    private void listenToServer() {
+    private void listenToServer() {  
         try {
             while (isRunning && isConnected()) {
                 Payload fromServer = (Payload) in.readObject(); // blocking read
@@ -293,8 +333,7 @@ public enum Client {
     /**
      * Listens for keyboard input from the user
      */
-    // arc73 6/24/24
-    private void listenToInput() {
+    private void listenToInput() {           
         try (Scanner si = new Scanner(System.in)) {
             System.out.println("Waiting for input"); // moved here to avoid console spam
             while (isRunning) { // Run until isRunning is false
@@ -318,7 +357,7 @@ public enum Client {
     /**
      * Closes the client connection and associated resources
      */
-    private void close() {
+    private void close() {   
         isRunning = false;
         closeServerConnection();
         System.out.println("Client terminated");
@@ -328,8 +367,7 @@ public enum Client {
     /**
      * Closes the server connection and associated resources
      */
-    // arc73 6/24/24
-    private void closeServerConnection() {
+    private void closeServerConnection() {  
         myData.reset();
         knownClients.clear();
         try {
@@ -368,7 +406,7 @@ public enum Client {
             e.printStackTrace();
         }
     }
-    // arc73 6/24/24
+
     /**
      * Handles received message from the ServerThread
      * 
@@ -408,7 +446,7 @@ public enum Client {
     }
 
     // payload processors
-    // arc73 6/24/24
+
     private void processDisconnect(long clientId, String clientName) {
         System.out.println(
                 TextFX.colorize(String.format("*%s disconnected*",
