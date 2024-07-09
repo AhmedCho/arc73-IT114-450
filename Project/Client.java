@@ -144,7 +144,7 @@ public enum Client {
             FlipPayload flipPayload = new FlipPayload(); // creates flip payload object
             flipPayload.setClientId(myData.getClientId());
             send(flipPayload); // sends flip payload to server to process command
-            System.out.println(TextFX.colorize("FlipPayload being sent...", Color.RED)); //Output to the console that the Flip Payload is being sent, colored in Red
+            System.out.println(TextFX.colorize("Sending FlipPayload", Color.BLUE)); //Output to the console that the Flip Payload is being sent, colored in Blue
             return true; // Return true if command is handled
          
         // arc73 7/8/24 - Handling Roll Command
@@ -178,8 +178,8 @@ public enum Client {
                 //Send payload to server
                 send(rollPayload);
             } catch (NumberFormatException e) {
-                //Print error in green if roll format is invalid
-                System.out.println(TextFX.colorize("Incorrectly typed format. Only use '/roll #' or '/roll #d#'", Color.GREEN));
+                //Print error in red if roll format is invalid
+                System.out.println(TextFX.colorize("Incorrectly typed format. Only use '/roll #' or '/roll #d#'", Color.RED));
             }
             return true;
 

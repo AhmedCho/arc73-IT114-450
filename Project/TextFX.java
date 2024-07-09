@@ -69,8 +69,8 @@ public abstract class TextFX {
         System.out.println(TextFX.colorize("Hello, world!", Color.RED));
         System.out.println(TextFX.colorize("This is some blue text.", Color.BLUE));
         System.out.println(TextFX.colorize("And this is green!", Color.GREEN));
-        System.out.println(TextFX.applyBold("This is bold text."));
-        System.out.println(TextFX.applyItalic("This is italic text."));
-        System.out.println(TextFX.applyUnderline("This is underlined text."));
+        System.out.println(TextFX.applyBold("And this is bold text."));
+        System.out.println(TextFX.applyItalic("And this is italic text."));
+        System.out.println(TextFX.applyUnderline("And this is underlined text."));
     }
 }
