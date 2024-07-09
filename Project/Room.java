@@ -21,22 +21,22 @@ public class Room implements AutoCloseable{
         isRunning = true;
         System.out.println(String.format("Room[%s] created", this.name));
     }
-
     public String getName() {
         return this.name;
     }
 
+
+    // arc73 7/8/24
    private String processTextEffects(String message) {
-        message = message.replaceAll("\\*\\*(.+?)\\*\\*", "<b>$1</b>"); 
-        message = message.replaceAll("\\*(.+?)\\*", "<i>$1</i>"); 
-        message = message.replaceAll("_(.+?)_", "<u>$1</u>"); 
-        message = message.replaceAll("#r(.+?)r#", "<red>$1</red>"); 
-        message = message.replaceAll("#g(.+?)g#", "<green>$1</green>"); 
-        message = message.replaceAll("#b(.+?)b#", "<blue>$1</blue>");                       
-        
-        message = message.replaceAll("\\*\\*_\\*(.+?)\\*_\\*\\*", "<b><i><u>$1</u></i></b>");
-        message = message.replaceAll("\\*#r(.+?)r#\\*", "<b><red>$1</red></b>");
-        return message;
+        message = message.replaceAll("#r(.+?)r#", "<red>$1</red>"); //#r[text]r# for blue text
+        message = message.replaceAll("#g(.+?)g#", "<green>$1</green>"); //#g[text]g# for green text
+        message = message.replaceAll("#b(.+?)b#", "<blue>$1</blue>"); //#b[text]b# for blue text
+        message = message.replaceAll("\\*\\*(.+?)\\*\\*", "<b>$1</b>"); // Double asterisk for bold text
+        message = message.replaceAll("\\*(.+?)\\*", "<i>$1</i>");  //Single asterisk for italic text
+        message = message.replaceAll("_(.+?)_", "<u>$1</u>"); // Underscore for underlined text                      
+        message = message.replaceAll("\\*\\*_\\*(.+?)\\*_\\*\\*", "<b><i><u>$1</u></i></b>"); //Replaces with bold/italic/underlined tags
+        message = message.replaceAll("\\*#r(.+?)r#\\*", "<b><red>$1</red></b>"); //Replaces with color HTML tags
+        return message; // returns processed message
     }
 
     
@@ -224,24 +224,37 @@ public class Room implements AutoCloseable{
     // end send data to client(s)
 
 
+    // arc73 7/8/24 - Handles FlipPayload
+    //Handle Flip Method
     protected synchronized void handleFlip(ServerThread sender, FlipPayload flipPayload) {
+        // Determines result of flip, either heads or tails
         String result = random.nextBoolean() ? "heads" : "tails";
+        // Writes a message to the console which displays the result of the flip
         String message = String.format("%s flipped a coin and got %s", sender.getClientName(), result);
+        // Message sent to clients connected to room
         sendMessage(null, message);
     }
     
+
+    //arc73 7/8/24 - Handles RollPayload
+    //Handle Roll Method
     protected synchronized void handleRoll(ServerThread sender, RollPayload rollPayload) {
+        //Gets number of dice from payload
         int Dicenumber = rollPayload.getDicenumber();
+        //Gets number of sides of each die from payload
         int Sidesnumber = rollPayload.getSidesnumber();
+        // Writes a message to the console indicating the result of the roll
         StringBuilder resultMessage = new StringBuilder(String.format("%s rolled %dd%d and got", sender.getClientName(), Dicenumber, Sidesnumber));      
         int total = 0;
-    
+        //for-loop iterates through the number of dice specified by the user and the result is appended to the total
         for (int i = 0; i < Dicenumber; i++) {
+            // Adds result from each die of the side landed on
             int rollResult = random.nextInt(Sidesnumber) + 1;
+            //Roll result added to total
             total += rollResult;
             resultMessage.append(" ").append(rollResult);
         }
-    
+        // Total is added to the message which is written to the console
         resultMessage.append(" (total: ").append(total).append(")");
         sendMessage(null, resultMessage.toString());
     }
