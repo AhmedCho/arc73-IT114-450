@@ -1,4 +1,5 @@
-package Project;
+package Project.Common;
+
 //arc73 7/8/24
 public class RollPayload extends Payload {
     //Number of dice being rolled
