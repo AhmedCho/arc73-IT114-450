@@ -1,33 +1,36 @@
-package Project;
+package Project.Server;
 
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.Random;
+import Project.Common.FlipPayload;
+import Project.Common.RollPayload;
 
+import java.util.Random;
+import Project.Common.LoggerUtil;
 
 public class Room implements AutoCloseable{
     private String name;// unique name of the Room
-    private volatile boolean isRunning = false;
+    protected volatile boolean isRunning = false;
     private ConcurrentHashMap<Long, ServerThread> clientsInRoom = new ConcurrentHashMap<Long, ServerThread>();
     private Random random = new Random();
 
     public final static String LOBBY = "lobby";
 
     private void info(String message) {
-        System.out.println(String.format("Room[%s]: %s", name, message));
+        LoggerUtil.INSTANCE.info(String.format("Room[%s]: %s", name, message));
     }
 
     public Room(String name) {
         this.name = name;
         isRunning = true;
-        System.out.println(String.format("Room[%s] created", this.name));
+        info("created");
     }
+
     public String getName() {
         return this.name;
     }
 
-
     // arc73 7/8/24
-   private String processTextEffects(String message) {
+    private String processTextEffects(String message) {
         message = message.replaceAll("#r(.+?)r#", "<red>$1</red>"); //#r[text]r# for blue text
         message = message.replaceAll("#g(.+?)g#", "<green>$1</green>"); //#g[text]g# for green text
         message = message.replaceAll("#b(.+?)b#", "<blue>$1</blue>"); //#b[text]b# for blue text
@@ -39,7 +42,7 @@ public class Room implements AutoCloseable{
         return message; // returns processed message
     }
 
-    
+
 
     protected synchronized void addClient(ServerThread client) {
         if (!isRunning) { // block action if Room isn't running
@@ -69,6 +72,7 @@ public class Room implements AutoCloseable{
         // happen before removal so leaving client gets the data
         sendRoomStatus(client.getClientId(), client.getClientName(), false);
         clientsInRoom.remove(client.getClientId());
+        LoggerUtil.INSTANCE.fine("Clients remaining in Room: " + clientsInRoom.size());
 
         info(String.format("%s[%s] left the room", client.getClientName(), client.getClientId(), getName()));
 
@@ -93,9 +97,11 @@ public class Room implements AutoCloseable{
         client.disconnect();
         // removedClient(client); // <-- use this just for normal room leaving
         clientsInRoom.remove(client.getClientId());
+        LoggerUtil.INSTANCE.fine("Clients remaining in Room: " + clientsInRoom.size());
         
         // Improved logging with user data
         info(String.format("%s[%s] disconnected", client.getClientName(), id));
+        autoCleanup();
     }
 
     protected synchronized void disconnectAll() {
@@ -108,6 +114,7 @@ public class Room implements AutoCloseable{
             return true;
         });
         info("Disconnect All finished");
+        autoCleanup();
     }
 
     /**
@@ -142,7 +149,7 @@ public class Room implements AutoCloseable{
      * @param client
      */
     protected synchronized void sendDisconnect(ServerThread client) {
-        info(String.format("sending disconnect status to %s recipients", getName(), clientsInRoom.size()));
+        info(String.format("sending disconnect status to %s recipients", clientsInRoom.size()));
         clientsInRoom.values().removeIf(clientInRoom -> {
             boolean failedToSend = !clientInRoom.sendDisconnect(client.getClientId(), client.getClientName());
             if (failedToSend) {
@@ -175,7 +182,7 @@ public class Room implements AutoCloseable{
      * @param isConnect
      */
     protected synchronized void sendRoomStatus(long clientId, String clientName, boolean isConnect) {
-        info(String.format("sending room status to %s recipients", getName(), clientsInRoom.size()));
+        info(String.format("sending room status to %s recipients", clientsInRoom.size()));
         clientsInRoom.values().removeIf(client -> {
             boolean failedToSend = !client.sendRoomAction(clientId, clientName, getName(), isConnect);
             if (failedToSend) {
@@ -223,7 +230,6 @@ public class Room implements AutoCloseable{
     }
     // end send data to client(s)
 
-
     // arc73 7/8/24 - Handles FlipPayload
     //Handle Flip Method
     protected synchronized void handleFlip(ServerThread sender, FlipPayload flipPayload) {
@@ -258,9 +264,11 @@ public class Room implements AutoCloseable{
         resultMessage.append(" (total: ").append(total).append(")");
         sendMessage(null, resultMessage.toString());
     }
-    
+
+
     // receive data from ServerThread
-    protected void handleCreateRoom(ServerThread sender, String room) {     
+    
+    protected void handleCreateRoom(ServerThread sender, String room) {
         if (Server.INSTANCE.createRoom(room)) {
             Server.INSTANCE.joinRoom(room, sender);
         } else {
@@ -272,6 +280,10 @@ public class Room implements AutoCloseable{
         if (!Server.INSTANCE.joinRoom(room, sender)) {
             sender.sendMessage(String.format("Room %s doesn't exist", room));
         }
+    }
+
+    protected void handleListRooms(ServerThread sender, String roomQuery){
+        sender.sendRooms(Server.INSTANCE.listRooms(roomQuery));
     }
 
     protected void clientDisconnect(ServerThread sender) {
