@@ -1,4 +1,4 @@
-package Project;
+package Project.Common;
 
 public enum PayloadType {
     CLIENT_CONNECT, // client requesting to connect to server (passing of initialization data [name])
@@ -8,6 +8,7 @@ public enum PayloadType {
     ROOM_CREATE,
     ROOM_JOIN, // join/leave room based on boolean
     MESSAGE,// sender and message
-    ROLL,
-    FLIP,
+    ROOM_LIST, // client: query for rooms, server: result of query
+    ROLL, // Roll payload types
+    FLIP, // Flip payload type
 }
