@@ -102,3 +102,13 @@
 [34m>[0m Created new Room lobby
 07/14/2024 20:25:54 [Project.Server.Server] ([32mINFO[0m):
 [34m>[0m Waiting for next client
+07/14/2024 21:02:12 [Project.Server.Server] ([32mINFO[0m):
+[34m>[0m Server Starting
+07/14/2024 21:02:12 [Project.Server.Server] ([32mINFO[0m):
+[34m>[0m Listening on port 3000
+07/14/2024 21:02:12 [Project.Server.Room] ([32mINFO[0m):
+[34m>[0m Room[lobby]: created
+07/14/2024 21:02:12 [Project.Server.Server] ([32mINFO[0m):
+[34m>[0m Created new Room lobby
+07/14/2024 21:02:12 [Project.Server.Server] ([32mINFO[0m):
+[34m>[0m Waiting for next client
