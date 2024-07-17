@@ -199,7 +199,8 @@ public enum Client {
                             .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));
             return true;
         }
-        else if (text.startsWith("@")) {  // Handle private message
+        //arc73 7/22/24 - Private messaging
+        else if (text.startsWith("@")) {
             int spaceIndex = text.indexOf(' ');
             if (spaceIndex > 0) {
                 String targetUsername = text.substring(1, spaceIndex);
@@ -207,7 +208,7 @@ public enum Client {
                 sendPrivateMessage(targetUsername, message);
                 return true;
             } else {
-                System.out.println(TextFX.colorize("Invalid private message format. Use @username message", Color.RED));
+                System.out.println(TextFX.colorize("Private message is formatted incorrectly, use @username.", Color.RED));
                 return true;
             }
         
