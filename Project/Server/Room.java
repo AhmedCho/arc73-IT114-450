@@ -25,7 +25,7 @@ public class Room implements AutoCloseable{
     private void info(String message) {
         LoggerUtil.INSTANCE.info(String.format("Room[%s]: %s", name, message));
     }
-
+    //arc73 7/22/24
     private static final String BOLD_REGEX = "\\*([^*]+)\\*";
     private static final String ITALICS_REGEX = "-([^\\-]+)-";
     private static final String UNDERLINE_REGEX = "_([^_]+)_";
@@ -380,7 +380,7 @@ public class Room implements AutoCloseable{
             .orElse(null);
 
         if (targetClient != null) {
-            String privateMessage = String.format("[Whisper from %s]: %s", sender.getClientName(), formattedMessage);
+            String privateMessage = String.format("[Private message from %s]: %s", sender.getClientName(), formattedMessage);
             targetClient.sendMessage(sender.getClientId(), privateMessage, true);
             sender.sendMessage(sender.getClientId(), privateMessage, true);
         } else {
