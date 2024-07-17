@@ -395,7 +395,7 @@ public class Room implements AutoCloseable{
         // Determines result of flip, either heads or tails
         String result = random.nextBoolean() ? "heads" : "tails";
         // Writes a message to the console which displays the result of the flip
-        String message = String.format("%s flipped a coin and got %s", sender.getClientName(), result);
+        String message = String.format("%s flipped a coin and got <b>%s</b>", sender.getClientName(), result);
         // Message sent to clients connected to room
         sendMessage(null, message);
     }
@@ -404,24 +404,24 @@ public class Room implements AutoCloseable{
     
     //arc73 7/22/24
     //Handle Roll Method
-    protected synchronized void handleRoll(ServerThread sender, RollPayload rollPayload) {          
-        //Gets number of dice from payload
+    protected synchronized void handleRoll(ServerThread sender, RollPayload rollPayload) {
+        // Gets number of dice from payload
         int Dicenumber = rollPayload.getDicenumber();
-        //Gets number of sides of each die from payload
+        // Gets number of sides of each die from payload
         int Sidesnumber = rollPayload.getSidesnumber();
         // Writes a message to the console indicating the result of the roll
-        StringBuilder resultMessage = new StringBuilder(String.format("%s rolled %dd%d and got", sender.getClientName(), Dicenumber, Sidesnumber));      
+        StringBuilder resultMessage = new StringBuilder(String.format("%s rolled %dd%d and got <b>", sender.getClientName(), Dicenumber, Sidesnumber));
         int total = 0;
-        //for-loop iterates through the number of dice specified by the user and the result is appended to the total
+        // for-loop iterates through the number of dice specified by the user and the result is appended to the total
         for (int i = 0; i < Dicenumber; i++) {
             // Adds result from each die of the side landed on
             int rollResult = random.nextInt(Sidesnumber) + 1;
-            //Roll result added to total
+            // Roll result added to total
             total += rollResult;
             resultMessage.append(" ").append(rollResult);
         }
         // Total is added to the message which is written to the console
-        resultMessage.append(" (total: ").append(total).append(")");
+        resultMessage.append(" (total: ").append(total).append(")</b>");
         sendMessage(null, resultMessage.toString());
     }
 

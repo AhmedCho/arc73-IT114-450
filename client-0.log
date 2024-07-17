@@ -1,0 +1,24 @@
+07/16/2024 21:36:50 [Project.Client.Client] ([32mINFO[0m):
+[34m>[0m Client Created
+07/16/2024 21:36:50 [Project.Client.ClientUI] ([34mFINE[0m):
+[34m>[0m Current panel: USER_INFO
+07/16/2024 21:36:54 [Project.Client.Views.UserDetailsPanel] ([32mINFO[0m):
+[34m>[0m Chosen username: Ahmed
+07/16/2024 21:36:54 [Project.Client.Client] ([32mINFO[0m):
+[34m>[0m Client connected
+07/16/2024 21:36:54 [Project.Client.Client] ([32mINFO[0m):
+[34m>[0m Received Payload: Payload[CLIENT_ID] Client Id [1] Message: [null] Client Name [Ahmed] Status [connect]
+07/16/2024 21:36:54 [Project.Client.ClientUI] ([34mFINE[0m):
+[34m>[0m Current panel: CHAT
+07/16/2024 21:36:54 [Project.Client.Client] ([32mINFO[0m):
+[34m>[0m Received Payload: Payload[ROOM_JOIN] Client Id [1] Message: [lobby] Client Name [Ahmed] Status [connect]
+07/16/2024 21:36:54 [Project.Client.ClientUI] ([32mINFO[0m):
+[34m>[0m Current card: CHAT
+07/16/2024 21:36:54 [Project.Client.Views.UserListPanel] ([32mINFO[0m):
+[34m>[0m Adding user to list: Ahmed (1)
+07/16/2024 21:37:00 [Project.Client.Client] ([32mINFO[0m):
+[34m>[0m Received Payload: Payload[MESSAGE] Client Id [-1] Message: [Ahmed rolled 1d100 and got 78 (total: 78)]
+07/16/2024 21:38:14 [Project.Client.Client] ([32mINFO[0m):
+[34m>[0m Received Payload: Payload[MESSAGE] Client Id [1] Message: [<span style='color:green;'> Green </span>]
+07/16/2024 21:38:43 [Project.Client.Client] ([32mINFO[0m):
+[34m>[0m Received Payload: Payload[MESSAGE] Client Id [1] Message: [Test]
