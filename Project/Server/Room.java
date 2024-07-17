@@ -5,19 +5,31 @@ import Project.Common.FlipPayload;
 import Project.Common.RollPayload;
 
 import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import Project.Common.LoggerUtil;
+import Project.Common.Payload;
+
+
+
 
 public class Room implements AutoCloseable{
     private String name;// unique name of the Room
     protected volatile boolean isRunning = false;
     private ConcurrentHashMap<Long, ServerThread> clientsInRoom = new ConcurrentHashMap<Long, ServerThread>();
     private Random random = new Random();
+    private String targetUsername;
 
     public final static String LOBBY = "lobby";
 
     private void info(String message) {
         LoggerUtil.INSTANCE.info(String.format("Room[%s]: %s", name, message));
     }
+
+    private static final String BOLD_REGEX = "\\*([^*]+)\\*";
+    private static final String ITALICS_REGEX = "-([^\\-]+)-";
+    private static final String UNDERLINE_REGEX = "_([^_]+)_";
+    private static final String COLOR_REGEX = "\\[([rgbsilver]*)\\s([a-zA-Z]+)\\s([rgbsilver]*)\\]";
 
     public Room(String name) {
         this.name = name;
@@ -29,20 +41,122 @@ public class Room implements AutoCloseable{
         return this.name;
     }
 
-    // arc73 7/8/24
-    private String processTextEffects(String message) {
-        message = message.replaceAll("#r(.+?)r#", "<red>$1</red>"); //#r[text]r# for blue text
-        message = message.replaceAll("#g(.+?)g#", "<green>$1</green>"); //#g[text]g# for green text
-        message = message.replaceAll("#b(.+?)b#", "<blue>$1</blue>"); //#b[text]b# for blue text
+    
+    //arc73 7/22/24
+    private String processTextEffects(String message) { 
+        message = message.replaceAll("#r(.+?)r#", "<span style='color:red;'>$1</span>"); // #r[text]r# for red text
+        message = message.replaceAll("#g(.+?)g#", "<span style='color:green;'>$1</span>"); // #g[text]g# for green text
+        message = message.replaceAll("#b(.+?)b#", "<span style='color:blue;'>$1</span>"); // #b[text]b# for blue text       
         message = message.replaceAll("\\*\\*(.+?)\\*\\*", "<b>$1</b>"); // Double asterisk for bold text
-        message = message.replaceAll("\\*(.+?)\\*", "<i>$1</i>");  //Single asterisk for italic text
+        message = message.replaceAll("\\*(.+?)\\*", "<i>$1</i>"); // Single asterisk for italic text
         message = message.replaceAll("_(.+?)_", "<u>$1</u>"); // Underscore for underlined text                      
-        message = message.replaceAll("\\*\\*_\\*(.+?)\\*_\\*\\*", "<b><i><u>$1</u></i></b>"); //Replaces with bold/italic/underlined tags
-        message = message.replaceAll("\\*#r(.+?)r#\\*", "<b><red>$1</red></b>"); //Replaces with color HTML tags
         return message; // returns processed message
     }
 
+    private String processBold(String message) {
+        System.out.println("Source Message (Bold): " + message);
+        // Print the original message for debugging
 
+
+        // Define the regular expression pattern for detecting bold formatting
+        Pattern pattern = Pattern.compile(BOLD_REGEX);
+        // Create a matcher object to find matches in the message
+        Matcher matcher = pattern.matcher(message);
+
+
+        // Iterate through all matches in the message
+        while (matcher.find()) {
+            // Create bold-formatted text using the matched content
+            String boldText = "<b>" + matcher.group(1) + "</b>";
+            // Replace the original matched content with the formatted text
+            message = message.replace(matcher.group(0), boldText);
+        }
+
+
+
+
+        // Print the formatted message for debugging
+        System.out.println("Formatted Message (Bold): " + message);
+        return message;
+    }
+
+    private String processItalics(String message) { 
+        // Print the original message for debugging
+        System.out.println("Source Message (Italics): " + message);
+        // Define the regular expression pattern for detecting italics formatting
+        Pattern pattern = Pattern.compile(ITALICS_REGEX);
+        // Create a matcher object to find matches in the message
+        Matcher matcher = pattern.matcher(message);
+
+
+        // Iterate through all matches in the message
+        while (matcher.find()) {
+            // Create italics-formatted text using the matched content
+            String italicText = "<i>" + matcher.group(1) + "</i>";
+            // Replace the original matched content with the formatted text
+            message = message.replace(matcher.group(0), italicText);
+        }
+        // Print the formatted message for debugging
+        System.out.println("Formatted Message (Italics): " + message);
+        return message;
+    } 
+
+
+    private String processUnderline(String message) { 
+        System.out.println("Source Message (Underline): " + message);
+        Pattern pattern = Pattern.compile(UNDERLINE_REGEX);
+        Matcher matcher = pattern.matcher(message);
+
+
+        while (matcher.find()) {
+            String underlineText = "<u>" + matcher.group(1) + "</u>";
+            message = message.replace(matcher.group(0), underlineText);
+        }
+
+
+        System.out.println("Formatted Message (Underline): " + message);
+        return message;
+    }
+
+
+    private String processColor(String message) { 
+        System.out.println("Source Message (Color): " + message);
+        Pattern pattern = Pattern.compile(COLOR_REGEX);
+        Matcher matcher = pattern.matcher(message);
+
+        while (matcher.find()) {
+            String colorText = "<font.color=" + matcher.group(2) + ">" + matcher.group(3) + "</font>";
+            message = message.replace(matcher.group(0), colorText);
+        }
+        
+
+        message = message.replace("[r", "<font color=red>").replace("r]","</font>");
+        message = message.replace("[g", "<font color=green>").replace("g]","</font>");
+        message = message.replace("[b", "<font color=blue>").replace("b]","</font>");        
+           
+        System.out.println("Formatted Message (Color): " + message);
+        return message;
+    } 
+
+    private String formatMessage(String message) { 
+        System.out.println("Source Message: " + message);
+        message = processBold(message);
+        message = processItalics(message);
+        message = processUnderline(message);
+        message = processColor(message);
+
+       
+        System.out.println("Formatted Message: " + message);
+        return message;
+
+    }
+
+    public void processTextFormatting(ServerThread sender, String message) {
+        String formattedMessage = formatMessage(message);
+        sendMessage(sender, formattedMessage);
+    }
+
+   
 
     protected synchronized void addClient(ServerThread client) {
         if (!isRunning) { // block action if Room isn't running
@@ -142,6 +256,16 @@ public class Room implements AutoCloseable{
         info(String.format("closed", name));
     }
 
+    public void setTargetUsername(String targetUsername) {
+        this.targetUsername = targetUsername;
+    }
+    
+    public String getTargetUsername() {
+        return this.targetUsername;
+    }
+
+
+  
     // send/sync data to client(s)
 
     /**
@@ -206,13 +330,19 @@ public class Room implements AutoCloseable{
      * @param sender  ServerThread (client) sending the message or null if it's a
      *                server-generated message
      */
+    
     protected synchronized void sendMessage(ServerThread sender, String message) {
+        sendMessage(sender, message, false);
+    }
+    protected synchronized void sendMessage(ServerThread sender, String message, boolean isPrivate) {
+        
         if (!isRunning) { // block action if Room isn't running
             return;
         }
 
         // Note: any desired changes to the message must be done before this section
         long senderId = sender == null ? ServerThread.DEFAULT_CLIENT_ID : sender.getClientId();
+        
         final String[] messageToSend = { processTextEffects(message) };
         // loop over clients and send out the message; remove client if message failed
         // to be sent
@@ -220,7 +350,14 @@ public class Room implements AutoCloseable{
         // it's one way we can safely remove items during iteration
         info(String.format("sending message to %s recipients: %s", getName(), clientsInRoom.size(), messageToSend[0]));
         clientsInRoom.values().removeIf(client -> {
-            boolean failedToSend = !client.sendMessage(senderId, messageToSend[0]);
+            if (client.isMuted(senderId)) {
+                info(String.format("Message from %s to %s was skipped due to mute.", sender.getClientName(), client.getClientName()));
+                return false;
+            }
+
+
+
+            boolean failedToSend = !client.sendMessage(senderId, messageToSend[0], isPrivate);
             if (failedToSend) {
                 info(String.format("Removing disconnected client[%s] from list", client.getClientId()));
                 disconnect(client);
@@ -228,10 +365,32 @@ public class Room implements AutoCloseable{
         return failedToSend;
     });
     }
+
     // end send data to client(s)
 
-    // arc73 7/8/24 - Handles FlipPayload
-    //Handle Flip Method
+    public void handlePrivateMessage(ServerThread sender, Payload payload) {
+        String targetUsername = payload.getTargetUsername();
+        String message = payload.getMessage();
+
+        String formattedMessage = processTextEffects(message);
+
+        ServerThread targetClient = clientsInRoom.values().stream()
+            .filter(client -> client.getClientName().equalsIgnoreCase(targetUsername))
+            .findFirst()
+            .orElse(null);
+
+        if (targetClient != null) {
+            String privateMessage = String.format("[Whisper from %s]: %s", sender.getClientName(), formattedMessage);
+            targetClient.sendMessage(sender.getClientId(), privateMessage, true);
+            sender.sendMessage(sender.getClientId(), privateMessage, true);
+        } else {
+            sender.sendMessage(sender.getClientId(), String.format("User %s not found.", targetUsername), true);
+        }
+    }
+
+    
+    //arc73 7/22/24
+    //Handle Flip Method                                                                          
     protected synchronized void handleFlip(ServerThread sender, FlipPayload flipPayload) {
         // Determines result of flip, either heads or tails
         String result = random.nextBoolean() ? "heads" : "tails";
@@ -242,9 +401,10 @@ public class Room implements AutoCloseable{
     }
     
 
-    //arc73 7/8/24 - Handles RollPayload
+    
+    //arc73 7/22/24
     //Handle Roll Method
-    protected synchronized void handleRoll(ServerThread sender, RollPayload rollPayload) {
+    protected synchronized void handleRoll(ServerThread sender, RollPayload rollPayload) {          
         //Gets number of dice from payload
         int Dicenumber = rollPayload.getDicenumber();
         //Gets number of sides of each die from payload
@@ -289,6 +449,40 @@ public class Room implements AutoCloseable{
     protected void clientDisconnect(ServerThread sender) {
         disconnect(sender);
     }
+
+    public void handleMute(ServerThread sender, Payload payload) {
+        String targetUsername = payload.getTargetUsername();
+    
+        ServerThread targetClient = clientsInRoom.values().stream()
+            .filter(client -> client.getClientName().equalsIgnoreCase(targetUsername))
+            .findFirst()
+            .orElse(null);
+    
+        if (targetClient != null) {
+            sender.addToMuteList(targetClient.getClientId());
+            sender.sendMessage(sender.getClientId(), "You have muted " + targetUsername, false);
+        } else {
+            sender.sendMessage(sender.getClientId(), "User " + targetUsername + " not found.", false);
+        }
+    }
+
+    public void handleUnmute(ServerThread sender, Payload payload) {
+        String targetUsername = payload.getTargetUsername();
+    
+        ServerThread targetClient = clientsInRoom.values().stream()
+            .filter(client -> client.getClientName().equalsIgnoreCase(targetUsername))
+            .findFirst()
+            .orElse(null);
+    
+        if (targetClient != null) {
+            sender.removeFromMuteList(targetClient.getClientId());
+            sender.sendMessage(sender.getClientId(), "You have unmuted " + targetUsername, false);
+        } else {
+            sender.sendMessage(sender.getClientId(), "User " + targetUsername + " not found.", false);
+        }
+    }
+
+
 
     // end receive data from ServerThread
 }

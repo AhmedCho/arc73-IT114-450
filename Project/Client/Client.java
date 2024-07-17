@@ -26,6 +26,7 @@ import Project.Common.TextFX.Color;
 import Project.Common.FlipPayload;
 import Project.Common.RollPayload;
 
+
 /**
  * Demoing bi-directional communication between client and server in a
  * multi-client scenario
@@ -198,20 +199,33 @@ public enum Client {
                             .map(c -> String.format("%s(%s)", c.getClientName(), c.getClientId())).toList()));
             return true;
         }
-
-        // arc73 7/8/24 - Handling Flip Command
-        else if (text.equalsIgnoreCase("/flip")) { //checks if user enters "/flip" and ignores case differences
+        else if (text.startsWith("@")) {  // Handle private message
+            int spaceIndex = text.indexOf(' ');
+            if (spaceIndex > 0) {
+                String targetUsername = text.substring(1, spaceIndex);
+                String message = text.substring(spaceIndex + 1);
+                sendPrivateMessage(targetUsername, message);
+                return true;
+            } else {
+                System.out.println(TextFX.colorize("Invalid private message format. Use @username message", Color.RED));
+                return true;
+            }
+        
+            //arc73 7/22/24
+        }else if (text.equalsIgnoreCase("/flip")) { //checks if user enters "/flip" and ignores case differences
             FlipPayload flipPayload = new FlipPayload(); // creates flip payload object
-            flipPayload.setClientId(myData.getClientId());
+            flipPayload.setClientId(myData.getClientId());                                                                               
             send(flipPayload); // sends flip payload to server to process command
             System.out.println(TextFX.colorize("Sending FlipPayload", Color.BLUE)); //Output to the console that the Flip Payload is being sent, colored in Blue
             return true; // Return true if command is handled
          
-        // arc73 7/8/24 - Handling Roll Command
+        
+
+            //arc73 7/22/24
         } else if (text.startsWith("/roll ")) { //checks if user enters command starting with "/roll"
             try {
                 String rollCommand = text.substring(6).trim();
-                int Dicenumber; //Initializes variable for number of dice
+                int Dicenumber; //Initializes variable for number of dice                                                       
                 int Sidesnumber; //Initializes variable for number sides of each die
     
                 if (rollCommand.contains("d")) { //Checks if user entered 'd' which refers to  /roll #d# format
@@ -243,6 +257,16 @@ public enum Client {
             }
             return true;
 
+        } else if (text.startsWith("/mute ")) {
+            String targetUsername = text.replace("/mute ", "").trim();
+            sendMuteCommand(targetUsername);
+            return true;
+        } else if (text.startsWith("/unmute ")) {
+            String targetUsername = text.replace("/unmute ", "").trim();
+            sendUnmuteCommand(targetUsername);
+            return true;
+        
+
         } else { // logic previously from Room.java
             // decided to make this as separate block to separate the core client-side items
             // vs the ones that generally are used after connection and that send requests
@@ -267,6 +291,7 @@ public enum Client {
                         sendListRooms(commandValue);
                         wasCommand = true;
                         break;
+                    
                     // Note: these are to disconnect, they're not for changing rooms
                     case DISCONNECT:
                     case LOGOFF:
@@ -275,6 +300,7 @@ public enum Client {
                         wasCommand = true;
                         break;
                 }
+
                 return wasCommand;
             }
         }
@@ -284,7 +310,37 @@ public enum Client {
     public long getMyClientId() {
         return myData.getClientId();
     }
+
+
+
+    
     // send methods to pass data to the ServerThread
+
+
+    private void sendMuteCommand(String targetUsername) throws IOException {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.MUTE);
+        p.setTargetUsername(targetUsername);
+        send(p);
+    }
+
+    private void sendUnmuteCommand(String targetUsername) throws IOException {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.UNMUTE);
+        p.setTargetUsername(targetUsername);
+        send(p);
+    }
+
+
+
+    private void sendPrivateMessage(String targetUsername, String message) throws IOException {
+        Payload p = new Payload();
+        p.setPayloadType(PayloadType.MESSAGE);
+        p.setMessage(message);
+        p.setTargetUsername(targetUsername);
+        p.setPrivate(true);
+        send(p);
+    }
 
     /**
      * Sends a search to the server-side to get a list of potentially matching Rooms
@@ -352,6 +408,8 @@ public enum Client {
         send(p);
     }
 
+
+  
     /**
      * Sends chosen client name after socket handshake
      * 
@@ -383,6 +441,9 @@ public enum Client {
         }
 
     }
+
+    
+
     // end send methods
 
     public void start() throws IOException {

@@ -11,4 +11,6 @@ public enum PayloadType {
     ROOM_LIST, // client: query for rooms, server: result of query
     ROLL, // Roll payload types
     FLIP, // Flip payload type
+    MUTE, // Mutes client
+    UNMUTE, // Unmutes client
 }

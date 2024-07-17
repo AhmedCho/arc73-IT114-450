@@ -1,6 +1,0 @@
-07/14/2024 21:02:39 [Project.Client.Client] ([32mINFO[0m):
-[34m>[0m Client Created
-07/14/2024 21:02:39 [Project.Client.ClientUI] ([34mFINE[0m):
-[34m>[0m Current panel: USER_INFO
-07/14/2024 21:03:08 [Project.Client.ClientUI$2] ([31mSEVERE[0m):
-[34m>[0m Error during disconnect: Cannot invoke "java.io.ObjectOutputStream.writeObject(Object)" because "this.out" is null

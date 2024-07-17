@@ -1,8 +1,10 @@
 package Project.Server;
 
 import java.net.Socket;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.function.Consumer;
 
 import Project.Common.PayloadType;
@@ -103,7 +105,11 @@ public class ServerThread extends BaseServerThread {
                     setClientName(cp.getClientName());
                     break;
                 case MESSAGE:
+                if (payload.isPrivate()) {
+                    currentRoom.handlePrivateMessage(this, payload);
+                } else {
                     currentRoom.sendMessage(this, payload.getMessage());
+                }
                     break;
                 case ROOM_CREATE:
                     currentRoom.handleCreateRoom(this, payload.getMessage());
@@ -131,6 +137,12 @@ public class ServerThread extends BaseServerThread {
                         currentRoom.handleFlip(this, flipPayload); // Handles the roll command in the same room the client sent the payload from
                     }
                     break;
+                case MUTE:
+                    currentRoom.handleMute(this, payload);
+                    break;
+                case UNMUTE:
+                    currentRoom.handleUnmute(this, payload);
+                    break;
                 default:
                     break;
             }
@@ -139,6 +151,22 @@ public class ServerThread extends BaseServerThread {
         
         }
     }
+
+    private Set<Long> muteList = new HashSet<>();
+
+    public void addToMuteList(long clientId) {
+        muteList.add(clientId); 
+    }
+
+    public void removeFromMuteList(long clientId) {
+        muteList.remove(clientId);
+    }
+
+    public boolean isMuted(long clientId) {
+        return muteList.contains(clientId);
+    }
+
+    
 
     // send methods to pass data back to the Client
 
@@ -164,7 +192,7 @@ public class ServerThread extends BaseServerThread {
      * @return @see {@link #send(Payload)}
      */
     public boolean sendMessage(String message) {
-        return sendMessage(ServerThread.DEFAULT_CLIENT_ID, message);
+        return sendMessage(ServerThread.DEFAULT_CLIENT_ID, message, false);
     }
 
     /**
@@ -174,11 +202,12 @@ public class ServerThread extends BaseServerThread {
      * @param message
      * @return @see {@link #send(Payload)}
      */
-    public boolean sendMessage(long senderId, String message) {
+    public boolean sendMessage(long senderId, String message, boolean isPrivate) {
         Payload p = new Payload();
         p.setClientId(senderId);
         p.setMessage(message);
         p.setPayloadType(PayloadType.MESSAGE);
+        p.setPrivate(isPrivate);
         return send(p);
     }
 

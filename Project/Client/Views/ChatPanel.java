@@ -15,6 +15,7 @@ import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.io.IOException;
 
+
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -199,9 +200,14 @@ public class ChatPanel extends JPanel {
      * 
      * @param text The text of the message.
      */
+    //arc73 7/22/24
     public void addText(String text) {
         SwingUtilities.invokeLater(() -> {
+            System.out.println("Text added to chat: " + text);
             JEditorPane textContainer = new JEditorPane("text/plain", text);
+            textContainer.setContentType("text/html"); // Supports HTML text formatting - converts tags to formatted text
+            textContainer.setText(text);
+
             textContainer.setEditable(false);
             textContainer.setBorder(BorderFactory.createEmptyBorder());
 
