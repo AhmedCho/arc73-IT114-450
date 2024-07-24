@@ -1,6 +1,6 @@
 package Project.Common;
 
-//arc73 7/8/24
+
 public class RollPayload extends Payload {
     //Number of dice being rolled
     private int Dicenumber;
@@ -11,7 +11,7 @@ public class RollPayload extends Payload {
         setPayloadType(PayloadType.ROLL);              
     }
     //Getter - # of Dice
-    public int getDicenumber() {
+    public int getDiceNumber() {
         return Dicenumber;
     }
     //Setter - # of Dice
@@ -19,8 +19,8 @@ public class RollPayload extends Payload {
         this.Dicenumber = Dicenumber;
     }
     //Getter - # of Sides each die
-    public int getSidesnumber() {
-        return Sidesnumber;
+    public int getSidesNumber() {
+        return Sidesnumber; 
     }
     //Setter - # of Sides each die
     public void setSidesnumber(int Sidesnumber) {

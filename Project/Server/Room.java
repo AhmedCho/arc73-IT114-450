@@ -1,18 +1,22 @@
 package Project.Server;
+
 import java.util.concurrent.ConcurrentHashMap;
+
 import Project.Common.FlipPayload;
 import Project.Common.RollPayload;
-import java.util.Random;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import Project.Common.Payload;
+
+
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Random;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import Project.Common.LoggerUtil;
+import Project.Common.Payload;
 
 
 
@@ -21,7 +25,7 @@ public class Room implements AutoCloseable{
     private String name;// unique name of the Room
     protected volatile boolean isRunning = false;
     private ConcurrentHashMap<Long, ServerThread> clientsInRoom = new ConcurrentHashMap<Long, ServerThread>();
-    private Random random = new Random();
+
     private String targetUsername;
 
     public final static String LOBBY = "lobby";
@@ -366,13 +370,12 @@ public class Room implements AutoCloseable{
     }
 
     // end send data to client(s)
-
     //arc73 7/22/24
     public void handlePrivateMessage(ServerThread sender, Payload payload) {
         String targetUsername = payload.getTargetUsername();
         String message = payload.getMessage();
 
-        String formattedMessage = processTextEffects(message);
+        String formattedMessage = processTextEffects(message);               
 
         ServerThread targetClient = clientsInRoom.values().stream()
             .filter(client -> client.getClientName().equalsIgnoreCase(targetUsername))
@@ -380,7 +383,7 @@ public class Room implements AutoCloseable{
             .orElse(null);
 
         if (targetClient != null) {
-            String privateMessage = String.format("[Private message from %s]: %s", sender.getClientName(), formattedMessage);
+            String privateMessage = String.format("[Whisper from %s]: %s", sender.getClientName(), formattedMessage);
             targetClient.sendMessage(sender.getClientId(), privateMessage, true);
             sender.sendMessage(sender.getClientId(), privateMessage, true);
         } else {
@@ -390,14 +393,15 @@ public class Room implements AutoCloseable{
 
     
     //arc73 7/22/24
-    //Handle Flip Method                                                                          
+    //Handle Flip Method 
     protected synchronized void handleFlip(ServerThread sender, FlipPayload flipPayload) {
+        Random random = new Random();
+        boolean result = random.nextBoolean();
         // Determines result of flip, either heads or tails
-        String result = random.nextBoolean() ? "heads" : "tails";
         // Writes a message to the console which displays the result of the flip
-        String message = String.format("%s flipped a coin and got <b>%s</b>", sender.getClientName(), result);
+        String message = String.format("%s flipped a coin and got %s", sender.getClientName(), result ? "heads" : "tails");
         // Message sent to clients connected to room
-        sendMessage(null, message);
+        sendMessage(sender, message);
     }
     
 
@@ -406,25 +410,20 @@ public class Room implements AutoCloseable{
     //Handle Roll Method
     protected synchronized void handleRoll(ServerThread sender, RollPayload rollPayload) {
         // Gets number of dice from payload
-        int Dicenumber = rollPayload.getDicenumber();
+        int diceNumber = rollPayload.getDiceNumber();
         // Gets number of sides of each die from payload
-        int Sidesnumber = rollPayload.getSidesnumber();
+        int sidesNumber = rollPayload.getSidesNumber();
         // Writes a message to the console indicating the result of the roll
-        StringBuilder resultMessage = new StringBuilder(String.format("%s rolled %dd%d and got <b>", sender.getClientName(), Dicenumber, Sidesnumber));
-        int total = 0;
+        StringBuilder resultMessage = new StringBuilder(String.format("%s rolled %d dice with %d sides and got: ", sender.getClientName(), diceNumber, sidesNumber));
+        Random random = new Random();
         // for-loop iterates through the number of dice specified by the user and the result is appended to the total
-        for (int i = 0; i < Dicenumber; i++) {
+        for (int i = 0; i < diceNumber; i++) {
             // Adds result from each die of the side landed on
-            int rollResult = random.nextInt(Sidesnumber) + 1;
-            // Roll result added to total
-            total += rollResult;
-            resultMessage.append(" ").append(rollResult);
+            resultMessage.append(random.nextInt(sidesNumber) + 1).append(" ");
         }
         // Total is added to the message which is written to the console
-        resultMessage.append(" (total: ").append(total).append(")</b>");
-        sendMessage(null, resultMessage.toString());
+        sendMessage(sender, resultMessage.toString().trim());
     }
-
 
     // receive data from ServerThread
     
@@ -485,6 +484,8 @@ public class Room implements AutoCloseable{
         }
     }
 
+   
+    
     //arc73 7/29/24 - Handle mute method
     public void handleMute(ServerThread sender, Payload payload) {
     String targetUsername = payload.getTargetUsername();
@@ -507,7 +508,6 @@ public class Room implements AutoCloseable{
             sender.sendMessage(sender.getClientId(), "User " + targetUsername + " not found.", false);
         }
     }
-
     //arc73 7/29/24 - Handle unmute method
     public void handleUnmute(ServerThread sender, Payload payload) {
         String targetUsername = payload.getTargetUsername();
