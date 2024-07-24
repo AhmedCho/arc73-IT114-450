@@ -1,11 +1,8 @@
 package Project.Server;
 
 import java.util.concurrent.ConcurrentHashMap;
-
 import Project.Common.FlipPayload;
 import Project.Common.RollPayload;
-
-
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
@@ -400,8 +397,8 @@ public class Room implements AutoCloseable{
         // Determines result of flip, either heads or tails
         // Writes a message to the console which displays the result of the flip
         String message = String.format("%s flipped a coin and got %s", sender.getClientName(), result ? "heads" : "tails");
-        // Message sent to clients connected to room
-        sendMessage(sender, message);
+        // Message sent to clients connected to room - Formatted in bold
+        sendMessage(sender, "<b>" + message + "</b>");
     }
     
 
@@ -414,15 +411,15 @@ public class Room implements AutoCloseable{
         // Gets number of sides of each die from payload
         int sidesNumber = rollPayload.getSidesNumber();
         // Writes a message to the console indicating the result of the roll
-        StringBuilder resultMessage = new StringBuilder(String.format("%s rolled %d dice with %d sides and got: ", sender.getClientName(), diceNumber, sidesNumber));
+        StringBuilder resultMessage = new StringBuilder(String.format("%s rolled %d dice with %d sides, the result was: ", sender.getClientName(), diceNumber, sidesNumber));
         Random random = new Random();
         // for-loop iterates through the number of dice specified by the user and the result is appended to the total
         for (int i = 0; i < diceNumber; i++) {
             // Adds result from each die of the side landed on
             resultMessage.append(random.nextInt(sidesNumber) + 1).append(" ");
         }
-        // Total is added to the message which is written to the console
-        sendMessage(sender, resultMessage.toString().trim());
+        // Total is added to the message which is written to the console - Text formatted bold
+        sendMessage(sender, "<b>" + resultMessage.toString().trim() + "</b>");
     }
 
     // receive data from ServerThread
