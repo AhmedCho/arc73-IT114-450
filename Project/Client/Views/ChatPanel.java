@@ -1,5 +1,4 @@
 package Project.Client.Views;
-
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Component;
@@ -13,27 +12,30 @@ import java.awt.event.ContainerEvent;
 import java.awt.event.ContainerListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
-
-
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JEditorPane;
+import javax.swing.JFileChooser;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
 import javax.swing.JSplitPane;
 import javax.swing.JTextField;
-import javax.swing.ScrollPaneConstants;
-import javax.swing.SwingUtilities;
-import javax.swing.border.EmptyBorder;
-
 import Project.Client.CardView;
 import Project.Client.Client;
 import Project.Client.Interfaces.ICardControls;
 import Project.Common.LoggerUtil;
+import javax.swing.ScrollPaneConstants;
+import javax.swing.SwingUtilities;
+import javax.swing.border.EmptyBorder;
+import javax.swing.filechooser.FileNameExtensionFilter;
+
 
 /**
  * ChatPanel represents the main chat interface where messages can be sent and
@@ -43,6 +45,7 @@ public class ChatPanel extends JPanel {
     private JPanel chatArea = null;
     private UserListPanel userListPanel;
     private final float CHAT_SPLIT_PERCENT = 0.7f;
+    
 
     /**
      * Constructor to create the ChatPanel UI.
@@ -51,6 +54,7 @@ public class ChatPanel extends JPanel {
      */
     public ChatPanel(ICardControls controls) {
         super(new BorderLayout(10, 10));
+        
 
         JPanel chatContent = new JPanel(new GridBagLayout());
         chatContent.setAlignmentY(Component.TOP_ALIGNMENT);
@@ -185,7 +189,7 @@ public class ChatPanel extends JPanel {
      * @param clientId The ID of the client to be removed.
      */
     public void removeUserListItem(long clientId) {
-        SwingUtilities.invokeLater(() -> userListPanel.removeUserListItem(clientId));
+        SwingUtilities.invokeLater(() -> userListPanel.removeUserListItem(clientId));        
     }
 
     /**
@@ -195,15 +199,40 @@ public class ChatPanel extends JPanel {
         SwingUtilities.invokeLater(() -> userListPanel.clearUserList());
     }
 
+    //arc73 7/29/24 - Export chat history method
+    public void exportChatHistory() throws IOException {
+        StringBuilder chatHistory = new StringBuilder(); //StringBuilder for temporarily consolidating messages for exporting
+        for (Component component : chatArea.getComponents()) { //Iterates through content in chat area
+            if (component instanceof JEditorPane) {
+                JEditorPane textContainer = (JEditorPane) component;
+                chatHistory.append(textContainer.getText()).append("\n");
+            }
+        }
+        JFileChooser fileChooser = new JFileChooser(); //Initializes file selector for choosing save location of chat export
+        fileChooser.setDialogTitle("Save Chat History"); //Message to user
+        fileChooser.setFileFilter(new FileNameExtensionFilter("Text files", "txt"));
+        int userSelection = fileChooser.showSaveDialog(this);
+        if (userSelection == JFileChooser.APPROVE_OPTION) {  //Checks if user selected a file and selected 'save'
+            File fileToSave = fileChooser.getSelectedFile(); //Gets file chosen by user
+            String fileName = fileToSave.getAbsolutePath(); //Gets absolute file path
+            if (!fileName.toLowerCase().endsWith(".txt")) { //If file is missing .txt extension, it is then appended
+                fileName += ".txt";
+            }
+            try (BufferedWriter writer = new BufferedWriter(new FileWriter(fileName))) { // Writes chat history to file
+                 writer.write(chatHistory.toString()); //The contents of the StringBuilder are added to the file
+            }
+            System.out.println("Chat history has been saved to: " + fileName); //Output notifying user that chat history is saved
+        } 
+    }
+   
     /**
      * Adds a message to the chat area.
      * 
      * @param text The text of the message.
      */
-    //arc73 7/22/24
-    public void addText(String text) {
+    public void addText(String text) { 
         SwingUtilities.invokeLater(() -> {
-            System.out.println("Text added to chat: " + text);
+            System.out.println("Text added to chat panel: " + text);
             JEditorPane textContainer = new JEditorPane("text/plain", text);
             textContainer.setContentType("text/html"); // Supports HTML text formatting - converts tags to formatted text
             textContainer.setText(text);
@@ -212,7 +241,7 @@ public class ChatPanel extends JPanel {
             textContainer.setBorder(BorderFactory.createEmptyBorder());
 
             // Account for the width of the vertical scrollbar
-            JScrollPane parentScrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, chatArea);
+            JScrollPane parentScrollPane = (JScrollPane) SwingUtilities.getAncestorOfClass(JScrollPane.class, chatArea);      
             int scrollBarWidth = parentScrollPane.getVerticalScrollBar().getPreferredSize().width;
 
             // Adjust the width of the text container
@@ -237,11 +266,14 @@ public class ChatPanel extends JPanel {
             chatArea.revalidate();
             chatArea.repaint();
 
-            // Scroll down on new message
+            // Scroll down on new message                                                      
             SwingUtilities.invokeLater(() -> {
                 JScrollBar vertical = parentScrollPane.getVerticalScrollBar();
                 vertical.setValue(vertical.getMaximum());
             });
         });
     }
+
 }
+
+

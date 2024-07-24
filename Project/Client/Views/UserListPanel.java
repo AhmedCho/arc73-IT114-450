@@ -1,6 +1,7 @@
 package Project.Client.Views;
 
 import java.awt.BorderLayout;
+import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
@@ -10,7 +11,6 @@ import java.awt.event.ComponentEvent;
 import java.awt.event.ContainerEvent;
 import java.awt.event.ContainerListener;
 import java.util.HashMap;
-
 import javax.swing.Box;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
@@ -27,6 +27,7 @@ public class UserListPanel extends JPanel {
     private JPanel userListArea;
     private GridBagConstraints lastConstraints; // Keep track of the last constraints for the glue
     private HashMap<Long, UserListItem> userItemsMap; // Maintain a map of client IDs to UserListItems
+    private long highlightedUserId = -1; //arc73 7/29/24
 
     /**
      * Constructor to create the UserListPanel UI.
@@ -97,7 +98,7 @@ public class UserListPanel extends JPanel {
                 LoggerUtil.INSTANCE.warning("User already in the list: " + clientName);
                 return; // User already in the list
             }
-
+            System.out.println("Specified user being added to list in UserListPanel: " + clientName);
             LoggerUtil.INSTANCE.info("Adding user to list: " + clientName);
 
             UserListItem userItem = new UserListItem(clientId, clientName, userListArea);
@@ -170,6 +171,53 @@ public class UserListPanel extends JPanel {
             LoggerUtil.INSTANCE.info("Clearing user list");
             userItemsMap.clear(); // Clear the map
             userListArea.removeAll();
+            userListArea.revalidate();
+            userListArea.repaint();
+        });
+    }
+
+    //arc73 7/29/24 - User status (Mute/Unmute)
+    public void updateUserStatus(long clientId, String status) {
+        SwingUtilities.invokeLater(() -> {
+            //Retrieve client ID
+            UserListItem item = userItemsMap.get(clientId);
+            if (item != null) {
+                //Checks if user is muted
+                if ("muted".equals(status)) {
+                    //Sets username color to grey on user list panel
+                    item.setTextColor(Color.GRAY);
+                } else {
+                    //If not muted, sets color to default black
+                    item.setTextColor(Color.BLACK);
+                }
+                //Refreshes user list to apply changes
+                userListArea.revalidate();
+                userListArea.repaint();
+            }
+        });
+    }
+    //arc73 7/29/24
+    //Highlight user method
+    public void highlightUser(long clientId) {
+        SwingUtilities.invokeLater(() -> {
+            //Checks for previously highlighted user
+            if (highlightedUserId != -1) {
+                //Retreives highlighted user client ID
+                UserListItem previousItem = userItemsMap.get(highlightedUserId);
+                if (previousItem != null) {
+                    //Resets previously highlighted user background color back to white
+                    previousItem.setBackground(Color.WHITE);
+                }
+            }
+            //Retreives client ID of new user to highlight
+            UserListItem currentItem = userItemsMap.get(clientId);
+            if (currentItem != null) {
+                //Sets background text color to yellow to highlight text
+                currentItem.setBackground(Color.YELLOW);
+                //Updates highlighted user client ID
+                highlightedUserId = clientId; 
+            }
+            //Refreshes user list to apply changes
             userListArea.revalidate();
             userListArea.repaint();
         });

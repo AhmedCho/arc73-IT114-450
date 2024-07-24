@@ -1,5 +1,4 @@
 package Project.Client;
-
 import java.awt.BorderLayout;
 import java.awt.CardLayout;
 import java.awt.Component;
@@ -17,7 +16,8 @@ import javax.swing.JMenuBar;
 import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.SwingUtilities;
-
+import javax.swing.JMenu;
+import javax.swing.JMenuItem;
 import Project.Client.Interfaces.ICardControls;
 import Project.Client.Interfaces.IConnectionEvents;
 import Project.Client.Interfaces.IMessageEvents;
@@ -27,8 +27,9 @@ import Project.Client.Views.ConnectionPanel;
 import Project.Client.Views.Menu;
 import Project.Client.Views.RoomsPanel;
 import Project.Client.Views.UserDetailsPanel;
-
+import Project.Client.Views.UserListPanel;
 import Project.Common.LoggerUtil;
+
 
 /**
  * ClientUI is the main application window that manages different screens and
@@ -47,6 +48,7 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
     private ChatPanel chatPanel;
     private RoomsPanel roomsPanel;
     private JLabel roomLabel = new JLabel();
+    private UserListPanel userListPanel;
 
     {
         // Note: Moved from Client as this file is the entry point now
@@ -59,9 +61,10 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
         LoggerUtil.INSTANCE.setConfig(config);
     }
 
+
     /**
      * Constructor to create the main application window.
-     * 
+     *
      * @param title The title of the window.
      */
     public ClientUI(String title) {
@@ -72,7 +75,10 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
         cardContainer.setLayout(card);
         container.add(roomLabel, BorderLayout.NORTH);
         container.add(cardContainer, BorderLayout.CENTER);
-
+        //arc73 7/29/24
+        userListPanel = new UserListPanel();
+        Client.INSTANCE.setUserListPanel(userListPanel);
+        add(userListPanel, BorderLayout.EAST);
         cardContainer.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -81,22 +87,26 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
                 cardContainer.repaint();
             }
 
+
             @Override
             public void componentMoved(ComponentEvent e) {
                 // No specific action on move
             }
         });
 
+
         setMinimumSize(new Dimension(400, 400));
         setLocationRelativeTo(null); // Center the window
         menu = new Menu(this);
         this.setJMenuBar(menu);
+
 
         // Initialize panels
         connectionPanel = new ConnectionPanel(this);
         userDetailsPanel = new UserDetailsPanel(this);
         chatPanel = new ChatPanel(this);
         roomsPanel = new RoomsPanel(this);
+       
 
         setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
         this.addWindowListener(new WindowAdapter() {
@@ -108,7 +118,7 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
                 if (response == JOptionPane.YES_OPTION) {
                     try {
                         Client.INSTANCE.sendDisconnect();
-                    } catch (NullPointerException | IOException e) {
+                    } catch (Exception e) {
                         LoggerUtil.INSTANCE.severe("Error during disconnect: " + e.getMessage());
                     }
                     System.exit(0);
@@ -116,9 +126,29 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
             }
         });
 
+        addExportChatMenuItem();
         pack(); // Resize to fit components
         setVisible(true); // Show the window
     }
+
+    //arc73 7/29/24 - Chat export method
+    private void addExportChatMenuItem() {
+        JMenu fileMenu = new JMenu("File");     
+        JMenuItem exportChatMenuItem = new JMenuItem("Export Chat"); //Creates new button item to export chat history
+        exportChatMenuItem.addActionListener(e -> { //ActionListener handles click event of export chat button
+            try {
+                chatPanel.exportChatHistory();
+                //Displays success message when chat history is successfully exported
+                JOptionPane.showMessageDialog(this, "The chat history has exported successfully.", "Export Successful", JOptionPane.INFORMATION_MESSAGE);
+            } catch (IOException ex) {
+                //Displays error message when chat history fails to export
+                JOptionPane.showMessageDialog(this, "The chat history failed to export.: " + ex.getMessage(), "Export Failed", JOptionPane.ERROR_MESSAGE);
+            }
+        });
+        fileMenu.add(exportChatMenuItem); //Adds export chat menu item to the file menu
+        menu.add(fileMenu); //Adds file menu to menu bar
+    }
+
 
     /**
      * Finds the current visible panel and updates the current card state.
@@ -139,11 +169,13 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
         LoggerUtil.INSTANCE.fine("Current panel: " + currentCardPanel.getName());
     }
 
+
     @Override
     public void next() {
         card.next(cardContainer);
         findAndSetCurrentPanel();
     }
+
 
     @Override
     public void previous() {
@@ -151,16 +183,19 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
         findAndSetCurrentPanel();
     }
 
+
     @Override
     public void show(String cardName) {
         card.show(cardContainer, cardName);
         findAndSetCurrentPanel();
     }
 
+
     @Override
     public void addPanel(String cardName, JPanel panel) {
         cardContainer.add(panel, cardName);
     }
+
 
     @Override
     public void connect() {
@@ -170,12 +205,16 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
         setTitle(originalTitle + " - " + username);
         Client.INSTANCE.connect(host, port, username, this);
     }
+   
+   
+
 
     public static void main(String[] args) {
         // TODO update with your UCID instead of mine
         SwingUtilities.invokeLater(() -> new ClientUI("ARC73-Client"));
     }
     // Interface methods start
+
 
     @Override
     public void onClientDisconnect(long clientId, String clientName) {
@@ -192,13 +231,46 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
         }
     }
 
-    @Override
     public void onMessageReceive(long clientId, String message) {
         if (currentCard.ordinal() >= CardView.CHAT.ordinal()) {
             String clientName = Client.INSTANCE.getClientNameFromId(clientId);
             chatPanel.addText(String.format("%s[%s]: %s", clientName, clientId, message));
+
+            // arc73 7/29/24 - Message handling of mute/unmute
+            if (message.contains("You have muted")) {
+                // Extract the target username from the message
+                String targetUsername = message.split(" ")[3];
+                // Retrieve the client ID associated with the target username
+                long targetClientId = getClientIdFromName(targetUsername);
+                 // Print information about the muted user to the console
+                System.out.println("The following user is muted: " + targetUsername + ", ID: " + targetClientId);
+                 // Update the user status in the user list panel to 'muted'
+                userListPanel.updateUserStatus(targetClientId, "muted");
+
+            } else if (message.contains("You have unmuted")) {
+                // Extract the target username from the message
+                String targetUsername = message.split(" ")[3];
+                // Retrieve the client ID associated with the target username
+                long targetClientId = getClientIdFromName(targetUsername);
+                // Print information about the unmuted user to the console
+                System.out.println("The following user is unmuted: " + targetUsername + ", ID: " + targetClientId);
+                // Update the user status in the user list panel to 'active'
+                userListPanel.updateUserStatus(targetClientId, "active");
+            }
+    
+            userListPanel.highlightUser(clientId);
         }
     }
+
+    private long getClientIdFromName(String username) {
+    for (ClientData client : Client.INSTANCE.getKnownClients().values()) {
+        if (client.getClientName().equals(username)) {
+            return client.getClientId();
+        }
+    }
+    return -1; // Return an invalid ID if not found
+}
+
 
     @Override
     public void onReceiveClientId(long id) {
@@ -206,10 +278,12 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
         chatPanel.addText("*You connected*");
     }
 
+
     @Override
     public void onResetUserList() {
         chatPanel.clearUserList();
     }
+
 
     @Override
     public void onSyncClient(long clientId, String clientName) {
@@ -217,6 +291,7 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
             chatPanel.addUserListItem(clientId, String.format("%s (%s)", clientName, clientId));
         }
     }
+
 
     @Override
     public void onReceiveRoomList(List<String> rooms, String message) {
@@ -230,6 +305,7 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
             }
         }
     }
+
 
     @Override
     public void onRoomAction(long clientId, String clientName, String roomName, boolean isJoin) {
@@ -248,8 +324,10 @@ public class ClientUI extends JFrame implements IConnectionEvents, IMessageEvent
                 chatPanel.removeUserListItem(clientId);
             }
 
+
         }
     }
+
 
     // Interface methods end
 }

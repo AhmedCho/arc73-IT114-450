@@ -1,20 +1,23 @@
 package Project.Server;
-
+import java.io.IOException;
 import java.net.Socket;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.Consumer;
-
 import Project.Common.PayloadType;
 import Project.Common.RoomResultsPayload;
 import Project.Common.Payload;
 import Project.Common.RollPayload;
 import Project.Common.FlipPayload;
-
 import Project.Common.ConnectionPayload;
 import Project.Common.LoggerUtil;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
 
 /**
  * A server-side representation of a single client.
@@ -26,6 +29,7 @@ public class ServerThread extends BaseServerThread {
     private long clientId;
     private String clientName;
     private Consumer<ServerThread> onInitializationComplete; // callback to inform when this object is ready
+    private Set<String> muteList = new HashSet<>();
 
     /**
      * Wraps the Socket connection and takes a Server reference and a callback
@@ -43,7 +47,7 @@ public class ServerThread extends BaseServerThread {
         this.client = myClient;
         this.clientId = ServerThread.DEFAULT_CLIENT_ID;// this is updated later by the server
         this.onInitializationComplete = onInitializationComplete;
-
+        loadMuteList();
     }
 
     public void setClientName(String name) {
@@ -52,6 +56,11 @@ public class ServerThread extends BaseServerThread {
         }
         this.clientName = name;
         onInitialized();
+    }
+
+    public void setClientId(long clientId) {
+        this.clientId = clientId;
+        saveClientId();
     }
 
     public String getClientName() {
@@ -75,6 +84,7 @@ public class ServerThread extends BaseServerThread {
 
     @Override
     protected void onInitialized() {
+        loadMuteList();
         onInitializationComplete.accept(this); // Notify server that initialization is complete
     }
 
@@ -91,12 +101,12 @@ public class ServerThread extends BaseServerThread {
 
     @Override
     protected void disconnect() {
+        saveMuteList();
         // sendDisconnect(clientId, clientName);
         super.disconnect();
     }
 
-    // handle received message from the Client
-    //arc73 7/22/24
+    // arc73 7/29/24 - handle received message from the Client
     @Override
     protected void processPayload(Payload payload) {
         try {
@@ -152,22 +162,71 @@ public class ServerThread extends BaseServerThread {
         
         }
     }
-
-    private Set<Long> muteList = new HashSet<>();
-
-    public void addToMuteList(long clientId) {
-        muteList.add(clientId); 
+    //arc73 7/29/24
+    private void saveClientId() {
+        File file = new File(getClientName() + "_clientId.txt");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            writer.write(Long.toString(clientId));
+        } catch (IOException e) {
+            LoggerUtil.INSTANCE.severe("Encountered issue attempting to save client ID for client: " + getClientName(), e);
+        }
     }
-
-    public void removeFromMuteList(long clientId) {
-        muteList.remove(clientId);
+    //arc73 7/29/24
+    //Load mute list method
+    private void loadMuteList() {
+        File file = new File(getClientName() + "_mutelist.txt");
+        if (file.exists()) { //Checks if file exists
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) { //Read each line of the file and add it to the mute list
+                    muteList.add(line);
+                }
+                //Log mute list has been successfully loaded
+                LoggerUtil.INSTANCE.info("Mute list loaded for client: " + getClientName());
+                //Log error message if an IOException occurs while loading the file
+            } catch (IOException e) {
+                LoggerUtil.INSTANCE.severe("Encountered issue attempting to load mute list for client: " + getClientName(), e);
+            }
+        }
     }
-
-    public boolean isMuted(long clientId) {
-        return muteList.contains(clientId);
+    //Save mute list method
+    private void saveMuteList() {
+        File file = new File(getClientName() + "_mutelist.txt");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (String mutedUsername : muteList) { //Write each muted username in the muteList to the file
+                writer.write(mutedUsername);
+                writer.newLine();
+            }
+            // Log that the mute list has been successfully saved
+            LoggerUtil.INSTANCE.info("Mute list saved for client: " + getClientName());
+            // Log an error message if an IOException occurs while saving the file
+        } catch (IOException e) {
+            LoggerUtil.INSTANCE.severe("Encountered issue attempting to save mute list for client: " + getClientName(), e);
+        }
     }
+    
+    
 
     
+
+    //arc73 7/29/24
+    public void addToMuteList(String username) {
+        muteList.add(username);
+        saveMuteList();
+    }
+
+    public void removeFromMuteList(String username) {
+        muteList.remove(username);
+        saveMuteList();
+    }
+
+    public boolean isMuted(String username) {
+        return muteList.contains(username);
+    }
+
+    public Set<String> getMuteList() {
+        return muteList;
+    }
 
     // send methods to pass data back to the Client
 
