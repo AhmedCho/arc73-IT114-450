@@ -196,6 +196,7 @@ public class UserListPanel extends JPanel {
             }
         });
     }
+    //arc73 7/29/24
     //Highlight user method
     public void highlightUser(long clientId) {
         SwingUtilities.invokeLater(() -> {

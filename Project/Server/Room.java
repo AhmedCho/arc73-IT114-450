@@ -468,6 +468,7 @@ public class Room implements AutoCloseable{
             }
         }
     }
+    //arc73 7/29/24
     //Save mute list method
     private void saveMuteList(ServerThread client) {
         File file = new File(client.getClientName() + "_mutelist.txt");
@@ -484,6 +485,7 @@ public class Room implements AutoCloseable{
         }
     }
 
+    //arc73 7/29/24 - Handle mute method
     public void handleMute(ServerThread sender, Payload payload) {
     String targetUsername = payload.getTargetUsername();
 
@@ -506,6 +508,7 @@ public class Room implements AutoCloseable{
         }
     }
 
+    //arc73 7/29/24 - Handle unmute method
     public void handleUnmute(ServerThread sender, Payload payload) {
         String targetUsername = payload.getTargetUsername();
     
