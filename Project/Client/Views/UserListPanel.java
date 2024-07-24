@@ -175,39 +175,50 @@ public class UserListPanel extends JPanel {
             userListArea.repaint();
         });
     }
-//------------------------------------------------------------------------------------------------------------
+
     //arc73 7/29/24 - User status (Mute/Unmute)
     public void updateUserStatus(long clientId, String status) {
         SwingUtilities.invokeLater(() -> {
+            //Retrieve client ID
             UserListItem item = userItemsMap.get(clientId);
             if (item != null) {
+                //Checks if user is muted
                 if ("muted".equals(status)) {
-                    item.setTextColor(Color.GRAY); // Set the text color to gray
+                    //Sets username color to grey on user list panel
+                    item.setTextColor(Color.GRAY);
                 } else {
-                    item.setTextColor(Color.BLACK); // Set the text color to black
+                    //If not muted, sets color to default black
+                    item.setTextColor(Color.BLACK);
                 }
+                //Refreshes user list to apply changes
                 userListArea.revalidate();
                 userListArea.repaint();
             }
         });
     }
-
+    //Highlight user method
     public void highlightUser(long clientId) {
         SwingUtilities.invokeLater(() -> {
+            //Checks for previously highlighted user
             if (highlightedUserId != -1) {
+                //Retreives highlighted user client ID
                 UserListItem previousItem = userItemsMap.get(highlightedUserId);
                 if (previousItem != null) {
-                    previousItem.setBackground(Color.WHITE); // Reset the background color
+                    //Resets previously highlighted user background color back to white
+                    previousItem.setBackground(Color.WHITE);
                 }
             }
+            //Retreives client ID of new user to highlight
             UserListItem currentItem = userItemsMap.get(clientId);
             if (currentItem != null) {
-                currentItem.setBackground(Color.YELLOW); // Highlight the current user
+                //Sets background text color to yellow to highlight text
+                currentItem.setBackground(Color.YELLOW);
+                //Updates highlighted user client ID
                 highlightedUserId = clientId; 
             }
+            //Refreshes user list to apply changes
             userListArea.revalidate();
             userListArea.repaint();
         });
     }
 }
-//------------------------------------------------------------------------------------------------------------
