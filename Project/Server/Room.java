@@ -398,7 +398,7 @@ public class Room implements AutoCloseable{
         // Writes a message to the console which displays the result of the flip
         String message = String.format("%s flipped a coin and got %s", sender.getClientName(), result ? "heads" : "tails");
         // Message sent to clients connected to room - Formatted in bold
-        sendMessage(sender, "<i>" + message + "</i>");
+        sendMessage(sender, "<b>" + message + "</b>");
     }
     
 
@@ -419,7 +419,7 @@ public class Room implements AutoCloseable{
             resultMessage.append(random.nextInt(sidesNumber) + 1).append(" ");
         }
         // Total is added to the message which is written to the console - Text formatted bold
-        sendMessage(sender, "<i>" + resultMessage.toString().trim() + "</i>");
+        sendMessage(sender, "<b>" + resultMessage.toString().trim() + "</b>");
     }
 
     // receive data from ServerThread
