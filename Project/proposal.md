@@ -8,6 +8,6 @@ Milestone 2: https://github.com/AhmedCho/arc73-IT114-450/blob/main/Project/Outpu
 
 Milestone 3: https://github.com/AhmedCho/arc73-IT114-450/blob/main/Project/Output%20HW%20File/arc73_it114-milestone-3-chatroom-2024-m24_IT114-450-M2024.pdf
 
-Milestone 4:
+Milestone 4: https://github.com/AhmedCho/arc73-IT114-450/blob/main/Project/Output%20HW%20File/arc73_it114-milestone-4-chatroom-2024-m24_IT114-450-M2024.pdf
 
 Project Folder: https://github.com/AhmedCho/arc73-IT114-450/tree/main/Project
