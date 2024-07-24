@@ -1,13 +1,11 @@
 package Project.Server;
 import java.util.concurrent.ConcurrentHashMap;
-import Project.Common.ConnectionPayload;
 import Project.Common.FlipPayload;
 import Project.Common.RollPayload;
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import Project.Common.Payload;
-import Project.Common.PayloadType;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
