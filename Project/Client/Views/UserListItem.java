@@ -52,4 +52,7 @@ public class UserListItem extends JPanel {
     public String getClientName() {
         return textContainer.getText();
     }
+    public void setTextColor(Color color) {
+        textContainer.setForeground(color);
+    }
 }

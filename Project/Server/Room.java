@@ -1,14 +1,18 @@
 package Project.Server;
-
 import java.util.concurrent.ConcurrentHashMap;
 import Project.Common.FlipPayload;
 import Project.Common.RollPayload;
-
 import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import Project.Common.LoggerUtil;
 import Project.Common.Payload;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.FileReader;
+import java.io.FileWriter;
+import java.io.IOException;
+import Project.Common.LoggerUtil;
 
 
 
@@ -55,20 +59,12 @@ public class Room implements AutoCloseable{
 
     private String processBold(String message) {
         System.out.println("Source Message (Bold): " + message);
-        // Print the original message for debugging
-
-
-        // Define the regular expression pattern for detecting bold formatting
+       
         Pattern pattern = Pattern.compile(BOLD_REGEX);
-        // Create a matcher object to find matches in the message
         Matcher matcher = pattern.matcher(message);
 
-
-        // Iterate through all matches in the message
         while (matcher.find()) {
-            // Create bold-formatted text using the matched content
             String boldText = "<b>" + matcher.group(1) + "</b>";
-            // Replace the original matched content with the formatted text
             message = message.replace(matcher.group(0), boldText);
         }
 
@@ -168,6 +164,7 @@ public class Room implements AutoCloseable{
         }
         clientsInRoom.put(client.getClientId(), client);
         client.setCurrentRoom(this);
+        loadMuteList(client);
 
         // notify clients of someone joining
         sendRoomStatus(client.getClientId(), client.getClientName(), true);
@@ -209,6 +206,7 @@ public class Room implements AutoCloseable{
         long id = client.getClientId();
         sendDisconnect(client);
         client.disconnect();
+        saveMuteList(client);
         // removedClient(client); // <-- use this just for normal room leaving
         clientsInRoom.remove(client.getClientId());
         LoggerUtil.INSTANCE.fine("Clients remaining in Room: " + clientsInRoom.size());
@@ -350,7 +348,7 @@ public class Room implements AutoCloseable{
         // it's one way we can safely remove items during iteration
         info(String.format("sending message to %s recipients: %s", getName(), clientsInRoom.size(), messageToSend[0]));
         clientsInRoom.values().removeIf(client -> {
-            if (client.isMuted(senderId)) {
+            if (client.isMuted(sender.getClientName())) {
                 info(String.format("Message from %s to %s was skipped due to mute.", sender.getClientName(), client.getClientName()));
                 return false;
             }
@@ -363,11 +361,12 @@ public class Room implements AutoCloseable{
                 disconnect(client);
         }
         return failedToSend;
+        
     });
     }
 
     // end send data to client(s)
-    
+
     //arc73 7/22/24
     public void handlePrivateMessage(ServerThread sender, Payload payload) {
         String targetUsername = payload.getTargetUsername();
@@ -451,22 +450,65 @@ public class Room implements AutoCloseable{
         disconnect(sender);
     }
 
+    //arc73 7/29/24
+    //Load mute list method
+    private void loadMuteList(ServerThread client) {
+        File file = new File(client.getClientName() + "_mutelist.txt");
+        if (file.exists()) { //Checks if file existss
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
+                String line;
+                while ((line = reader.readLine()) != null) { //Read each line of the file and add it to the mute list
+                    client.addToMuteList(line);
+                }
+                //Log mute list has been successfully loaded
+                LoggerUtil.INSTANCE.info("Mute list loaded from " + file.getName());
+                //Log error message if an IOException occurs while loading the file
+            } catch (IOException e) {
+                LoggerUtil.INSTANCE.severe("Encountered issue attempting to load mute list for client: " + client.getClientName(), e);
+            }
+        }
+    }
+    //arc73 7/29/24
+    //Save mute list method
+    private void saveMuteList(ServerThread client) {
+        File file = new File(client.getClientName() + "_mutelist.txt");
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter(file))) {
+            for (String mutedUsername : client.getMuteList()) { //Write each muted username in the muteList to the file
+                writer.write(mutedUsername);
+                writer.newLine();
+            }
+            // Log that the mute list has been successfully saved
+            LoggerUtil.INSTANCE.info("Mute list saved for client: " + client.getClientName());
+            // Log an error message if an IOException occurs while saving the file
+        } catch (IOException e) {
+            LoggerUtil.INSTANCE.severe("Encountered issue attempting to save mute list for client: " + client.getClientName(), e);
+        }
+    }
+
+    //arc73 7/29/24 - Handle mute method
     public void handleMute(ServerThread sender, Payload payload) {
-        String targetUsername = payload.getTargetUsername();
-    
-        ServerThread targetClient = clientsInRoom.values().stream()
-            .filter(client -> client.getClientName().equalsIgnoreCase(targetUsername))
-            .findFirst()
-            .orElse(null);
-    
+    String targetUsername = payload.getTargetUsername();
+
+    ServerThread targetClient = clientsInRoom.values().stream()
+        .filter(client -> client.getClientName().equalsIgnoreCase(targetUsername))
+        .findFirst()
+        .orElse(null);
+
         if (targetClient != null) {
-            sender.addToMuteList(targetClient.getClientId());
-            sender.sendMessage(sender.getClientId(), "You have muted " + targetUsername, false);
+            if (!sender.isMuted(targetClient.getClientName())) {
+                sender.addToMuteList(targetClient.getClientName());
+                saveMuteList(sender);
+                sender.sendMessage(sender.getClientId(), "You have muted " + targetUsername, false);
+                targetClient.sendMessage(targetClient.getClientId(), "You have been muted by " + sender.getClientName(), false);
+            } else {
+                sender.sendMessage(sender.getClientId(), targetUsername + " is already muted.", false);
+            }
         } else {
             sender.sendMessage(sender.getClientId(), "User " + targetUsername + " not found.", false);
         }
     }
 
+    //arc73 7/29/24 - Handle unmute method
     public void handleUnmute(ServerThread sender, Payload payload) {
         String targetUsername = payload.getTargetUsername();
     
@@ -475,14 +517,19 @@ public class Room implements AutoCloseable{
             .findFirst()
             .orElse(null);
     
-        if (targetClient != null) {
-            sender.removeFromMuteList(targetClient.getClientId());
-            sender.sendMessage(sender.getClientId(), "You have unmuted " + targetUsername, false);
-        } else {
-            sender.sendMessage(sender.getClientId(), "User " + targetUsername + " not found.", false);
+            if (targetClient != null) {
+                if (sender.isMuted(targetClient.getClientName())) {
+                    sender.removeFromMuteList(targetClient.getClientName());
+                    saveMuteList(sender);
+                    sender.sendMessage(sender.getClientId(), "You have unmuted " + targetUsername, false);
+                    targetClient.sendMessage(targetClient.getClientId(), "You have been unmuted by " + sender.getClientName(), false);
+                } else {
+                    sender.sendMessage(sender.getClientId(), targetUsername + " is not muted.", false);
+                }
+            } else {
+                sender.sendMessage(sender.getClientId(), "User " + targetUsername + " not found.", false);
+            }
         }
-    }
-
 
 
     // end receive data from ServerThread

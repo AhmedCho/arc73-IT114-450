@@ -11,11 +11,13 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-
+import Project.Common.FlipPayload;
+import Project.Common.RollPayload;
 import Project.Client.Interfaces.IConnectionEvents;
 import Project.Client.Interfaces.IClientEvents;
 import Project.Client.Interfaces.IMessageEvents;
 import Project.Client.Interfaces.IRoomEvents;
+import Project.Client.Views.UserListPanel;
 import Project.Common.ConnectionPayload;
 import Project.Common.LoggerUtil;
 import Project.Common.Payload;
@@ -23,8 +25,7 @@ import Project.Common.PayloadType;
 import Project.Common.RoomResultsPayload;
 import Project.Common.TextFX;
 import Project.Common.TextFX.Color;
-import Project.Common.FlipPayload;
-import Project.Common.RollPayload;
+
 
 
 /**
@@ -54,6 +55,7 @@ public enum Client {
     private volatile boolean isRunning = true; // volatile for thread-safe visibility
     private ConcurrentHashMap<Long, ClientData> knownClients = new ConcurrentHashMap<>();
     private ClientData myData;
+    private UserListPanel userListPanel;
 
     // constants (used to reduce potential types when using them in code)
     private final String COMMAND_CHARACTER = "/";
@@ -72,6 +74,29 @@ public enum Client {
     private Client() {
         LoggerUtil.INSTANCE.info("Client Created");
         myData = new ClientData();
+    }
+
+    public ConcurrentHashMap<Long, ClientData> getKnownClients() {
+        return knownClients;
+    }
+
+    // Setter for userListPanel
+    public void setUserListPanel(UserListPanel userListPanel) {
+        this.userListPanel = userListPanel;
+    }
+
+    // Method to update user status
+    public void updateUserStatus(long clientId, String status) {
+        if (userListPanel != null) {
+            userListPanel.updateUserStatus(clientId, status);
+        }
+    }
+
+    // Method to highlight user
+    public void highlightUser(long clientId) {
+        if (userListPanel != null) {
+            userListPanel.highlightUser(clientId);
+        }
     }
 
     public boolean isConnected() {
@@ -114,7 +139,7 @@ public enum Client {
     /**
      * Takes an ip address and a port to attempt a socket connection to a server.
      * 
-     * @param address
+     * @param address 
      * @param port
      * @param username
      * @param callback (for triggering UI events)
@@ -212,7 +237,7 @@ public enum Client {
                 return true;
             }
         
-            //arc73 7/22/24
+        //arc73 7/22/24
         }else if (text.equalsIgnoreCase("/flip")) { //checks if user enters "/flip" and ignores case differences
             FlipPayload flipPayload = new FlipPayload(); // creates flip payload object
             flipPayload.setClientId(myData.getClientId());                                                                               
@@ -220,8 +245,6 @@ public enum Client {
             System.out.println(TextFX.colorize("Sending FlipPayload", Color.BLUE)); //Output to the console that the Flip Payload is being sent, colored in Blue
             return true; // Return true if command is handled
          
-        
-
             //arc73 7/22/24
         } else if (text.startsWith("/roll ")) { //checks if user enters command starting with "/roll"
             try {
@@ -317,9 +340,11 @@ public enum Client {
     
     // send methods to pass data to the ServerThread
 
+    
+
 
     private void sendMuteCommand(String targetUsername) throws IOException {
-        Payload p = new Payload();
+        Payload p = new Payload();  
         p.setPayloadType(PayloadType.MUTE);
         p.setTargetUsername(targetUsername);
         send(p);
@@ -338,7 +363,7 @@ public enum Client {
         Payload p = new Payload();
         p.setPayloadType(PayloadType.MESSAGE);
         p.setMessage(message);
-        p.setTargetUsername(targetUsername);
+        p.setTargetUsername(targetUsername);                              
         p.setPrivate(true);
         send(p);
     }
@@ -663,7 +688,34 @@ public enum Client {
         System.out.println(TextFX.colorize(String.format("%s: %s", name, message), Color.BLUE));
         // invoke onMessageReceive callback
         ((IMessageEvents) events).onMessageReceive(clientId, message);
+
+        if (message.contains("You have muted")) {
+            // Assuming "You have muted [targetUsername]" message format
+            String targetUsername = message.split(" ")[3];
+            long targetClientId = getClientIdFromName(targetUsername);
+            userListPanel.updateUserStatus(targetClientId, "muted");
+        } else if (message.contains("You have unmuted")) {
+            // Assuming "You have unmuted [targetUsername]" message format
+            String targetUsername = message.split(" ")[3];
+            long targetClientId = getClientIdFromName(targetUsername);
+            userListPanel.updateUserStatus(targetClientId, "active");
+        }
+
+        userListPanel.highlightUser(clientId);
     }
+
+    private long getClientIdFromName(String username) {
+        for (ClientData client : knownClients.values()) {
+            if (client.getClientName().equals(username)) {
+                return client.getClientId();
+            }
+        }
+        return -1; // Return an invalid ID if not found
+    }
+
+    
+
+
 
     private void processClientSync(long clientId, String clientName) {
 
