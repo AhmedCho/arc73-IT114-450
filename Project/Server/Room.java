@@ -380,7 +380,7 @@ public class Room implements AutoCloseable{
             .orElse(null);
 
         if (targetClient != null) {
-            String privateMessage = String.format("[Whisper from %s]: %s", sender.getClientName(), formattedMessage);
+            String privateMessage = String.format("[Private message from %s]: %s", sender.getClientName(), formattedMessage);
             targetClient.sendMessage(sender.getClientId(), privateMessage, true);
             sender.sendMessage(sender.getClientId(), privateMessage, true);
         } else {
